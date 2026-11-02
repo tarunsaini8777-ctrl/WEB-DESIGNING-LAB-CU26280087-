@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 3
+     Q15. Write a script utilizing arrow functions, template literals, and destructuring
+     assignment syntax (ES6 features).
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q15 - ES6 Features</title>
+  <style>
+
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #1f2937; }
+    .card { max-width: 640px; margin: 0 auto; background: #fff; padding: 26px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    h1 { margin: 0 0 6px; font-size: 1.45rem; color: #1d4ed8; }
+    p.hint { margin: 0 0 16px; color: #6b7280; font-size: .92rem; }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; }
+    input[type=text], input[type=number], input[type=password], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+    button { padding: 10px 20px; border: 0; border-radius: 8px; background: #1d4ed8; color: #fff; font: inherit; cursor: pointer; margin: 10px 8px 0 0; }
+    button:hover { background: #1e40af; }
+    button.secondary { background: #64748b; } button.danger { background: #dc2626; }
+    .out { margin-top: 18px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 48px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .92rem; }
+    .ok { color: #15803d; font-weight: 700; } .bad { color: #b91c1c; font-weight: 700; }
+
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>ES6: Arrow, Template Literals, Destructuring</h1>
+    <div class="out" id="out"></div>
+  </div>
+
+  <script>
+    const lines = [];
+    const print = (s) => { console.log(s); lines.push(s); };
+
+    // 1. ARROW FUNCTIONS
+    const square = n => n * n;                           // one parameter, implicit return
+    const add = (a, b) => a + b;                         // two parameters
+    const describe = (name, age) => {                    // block body needs explicit return
+      const group = age >= 18 ? 'adult' : 'minor';
+      return `${name} is an ${group}`;
+    };
+    print(`square(7) = ${square(7)},  add(3, 4) = ${add(3, 4)}`);
+    print(describe('Neha', 20));
+    print('Doubled array: ' + [1, 2, 3, 4].map(n => n * 2).join(', '));
+
+    // 2. TEMPLATE LITERALS  (backticks, ${expressions}, multi-line)
+    const product = { name: 'Laptop', price: 55000, qty: 2 };
+    print(`Order: ${product.qty} x ${product.name} = Rs. ${(product.price * product.qty).toLocaleString('en-IN')}`);
+    print(`Multi-line
+       template literal
+       keeps line breaks`);
+
+    // 3. DESTRUCTURING
+    const student = { name: 'Aman', course: 'MCA', address: { city: 'Roorkee', pin: 247667 } };
+    const { name, course } = student;                    // object destructuring
+    const { address: { city } } = student;               // nested
+    const { grade = 'Not graded' } = student;            // default value
+    const { name: studentName } = student;               // rename
+    print(`${name} studies ${course} in ${city} (grade: ${grade}, alias: ${studentName})`);
+
+    const [first, second, ...others] = [10, 20, 30, 40, 50];   // array destructuring + rest
+    print(`first=${first}, second=${second}, others=[${others}]`);
+
+    let x = 1, y = 2;
+    [x, y] = [y, x];                                     // swap without a temp variable
+    print(`After swap: x=${x}, y=${y}`);
+
+    // destructuring in function parameters
+    const printUser = ({ name, course = 'N/A' }) => `User: ${name}, Course: ${course}`;
+    print(printUser({ name: 'Neha' }));
+
+    // spread
+    const merged = { ...student, course: 'BCA', year: 2 };
+    print('Spread/merge: ' + JSON.stringify(merged));
+
+    document.getElementById('out').textContent = lines.join('\n');
+  </script>
+</body>
+</html>

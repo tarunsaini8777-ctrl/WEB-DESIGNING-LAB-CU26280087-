@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 3
+     Q21. Write a JavaScript program demonstrating callback functions and asynchronous
+     behavior using setTimeout.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q21 - Callbacks and setTimeout</title>
+  <style>
+
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #1f2937; }
+    .card { max-width: 640px; margin: 0 auto; background: #fff; padding: 26px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    h1 { margin: 0 0 6px; font-size: 1.45rem; color: #1d4ed8; }
+    p.hint { margin: 0 0 16px; color: #6b7280; font-size: .92rem; }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; }
+    input[type=text], input[type=number], input[type=password], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+    button { padding: 10px 20px; border: 0; border-radius: 8px; background: #1d4ed8; color: #fff; font: inherit; cursor: pointer; margin: 10px 8px 0 0; }
+    button:hover { background: #1e40af; }
+    button.secondary { background: #64748b; } button.danger { background: #dc2626; }
+    .out { margin-top: 18px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 48px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .92rem; }
+    .ok { color: #15803d; font-weight: 700; } .bad { color: #b91c1c; font-weight: 700; }
+
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Callbacks and Asynchronous Behaviour</h1>
+    <p class="hint">Press the button and watch the order in which the messages appear (time in ms since the start).</p>
+    <button id="run">Run demo</button>
+    <button id="clear" class="secondary">Clear</button>
+    <div class="out" id="out">Press "Run demo".</div>
+  </div>
+
+  <script>
+    const out = document.getElementById('out');
+    let t0 = 0;
+    const log = (msg) => {
+      const line = `[${String(Math.round(performance.now() - t0)).padStart(4)} ms] ${msg}`;
+      console.log(line);
+      out.textContent += (out.textContent === '' ? '' : '\n') + line;
+    };
+
+    // 1. A SYNCHRONOUS callback: the function passed in is called immediately
+    function greet(name, callback) { log(`Hello, ${name}!`); callback(); }
+
+    // 2. An ASYNCHRONOUS callback: setTimeout calls it later
+    function fetchUser(id, callback) {
+      log(`Fetching user ${id} ... (takes 1 second)`);
+      setTimeout(() => callback(null, { id, name: 'Aman' }), 1000);      // error-first callback pattern
+    }
+    function fetchOrders(userId, callback) {
+      log(`Fetching orders of user ${userId} ... (takes 1 second)`);
+      setTimeout(() => callback(null, ['Book', 'Pen']), 1000);
+    }
+
+    function runDemo() {
+      out.textContent = '';
+      t0 = performance.now();
+
+      log('1. Start of program');
+
+      greet('Neha', () => log('2. Synchronous callback finished'));
+
+      setTimeout(() => log('4. setTimeout with 0 ms (still runs AFTER the main code)'), 0);
+      setTimeout(() => log('5. setTimeout with 500 ms'), 500);
+
+      // Nested callbacks: each step starts only when the previous one is done ("callback hell" if it gets deeper)
+      fetchUser(1, (err, user) => {
+        if (err) { log('Error: ' + err); return; }
+        log(`6. Got user: ${user.name}`);
+        fetchOrders(user.id, (err2, orders) => {
+          if (err2) { log('Error: ' + err2); return; }
+          log(`7. Got orders: ${orders.join(', ')}`);
+          log('8. All done!');
+        });
+      });
+
+      log('3. End of main code (JavaScript does not wait for the timers)');
+    }
+
+    document.getElementById('run').addEventListener('click', runDemo);
+    document.getElementById('clear').addEventListener('click', () => { out.textContent = ''; });
+  </script>
+</body>
+</html>

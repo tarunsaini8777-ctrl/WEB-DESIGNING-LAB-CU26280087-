@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 3
+     Q3. Write a script using JavaScript conditional statements (if-else, switch) to
+     determine student grade letter based on numerical marks.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q3 - Student Grade</title>
+  <style>
+
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #1f2937; }
+    .card { max-width: 640px; margin: 0 auto; background: #fff; padding: 26px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    h1 { margin: 0 0 6px; font-size: 1.45rem; color: #1d4ed8; }
+    p.hint { margin: 0 0 16px; color: #6b7280; font-size: .92rem; }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; }
+    input[type=text], input[type=number], input[type=password], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+    button { padding: 10px 20px; border: 0; border-radius: 8px; background: #1d4ed8; color: #fff; font: inherit; cursor: pointer; margin: 10px 8px 0 0; }
+    button:hover { background: #1e40af; }
+    button.secondary { background: #64748b; } button.danger { background: #dc2626; }
+    .out { margin-top: 18px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 48px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .92rem; }
+    .ok { color: #15803d; font-weight: 700; } .bad { color: #b91c1c; font-weight: 700; }
+
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Student Grade</h1>
+    <label for="marks">Marks (0 - 100)</label>
+    <input type="number" id="marks" min="0" max="100" placeholder="e.g. 78">
+    <button id="go">Find grade</button>
+    <div class="out" id="out">Enter marks and press the button.</div>
+  </div>
+
+  <script>
+    // METHOD 1: if - else if - else
+    function gradeIfElse(m) {
+      if (m >= 90)      return 'A+';
+      else if (m >= 80) return 'A';
+      else if (m >= 70) return 'B';
+      else if (m >= 60) return 'C';
+      else if (m >= 50) return 'D';
+      else              return 'F';
+    }
+
+    // METHOD 2: switch (on the tens digit of the marks)
+    function gradeSwitch(m) {
+      switch (Math.floor(m / 10)) {
+        case 10:
+        case 9:  return 'A+';
+        case 8:  return 'A';
+        case 7:  return 'B';
+        case 6:  return 'C';
+        case 5:  return 'D';
+        default: return 'F';
+      }
+    }
+
+    document.getElementById('go').addEventListener('click', () => {
+      const raw = document.getElementById('marks').value;
+      const m = Number(raw);
+      const out = document.getElementById('out');
+      if (raw === '' || Number.isNaN(m) || m < 0 || m > 100) {
+        out.textContent = 'Please enter marks between 0 and 100.';
+        return;
+      }
+      out.textContent =
+        `Marks            : ${m}\n` +
+        `Grade (if-else)  : ${gradeIfElse(m)}\n` +
+        `Grade (switch)   : ${gradeSwitch(m)}\n` +
+        `Result           : ${m >= 50 ? 'PASS' : 'FAIL'}`;
+    });
+  </script>
+</body>
+</html>

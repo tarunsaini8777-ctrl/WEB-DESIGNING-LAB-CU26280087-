@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 3
+     Q11. Write a JavaScript event handler for mouseover and mouseout events to change the
+     background color of an HTML element dynamically.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q11 - Mouseover and Mouseout</title>
+  <style>
+
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #1f2937; }
+    .card { max-width: 640px; margin: 0 auto; background: #fff; padding: 26px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    h1 { margin: 0 0 6px; font-size: 1.45rem; color: #1d4ed8; }
+    p.hint { margin: 0 0 16px; color: #6b7280; font-size: .92rem; }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; }
+    input[type=text], input[type=number], input[type=password], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+    button { padding: 10px 20px; border: 0; border-radius: 8px; background: #1d4ed8; color: #fff; font: inherit; cursor: pointer; margin: 10px 8px 0 0; }
+    button:hover { background: #1e40af; }
+    button.secondary { background: #64748b; } button.danger { background: #dc2626; }
+    .out { margin-top: 18px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 48px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .92rem; }
+    .ok { color: #15803d; font-weight: 700; } .bad { color: #b91c1c; font-weight: 700; }
+    .box { margin: 14px 0; padding: 36px 20px; text-align: center; border: 2px solid #94a3b8; border-radius: 10px; background: #ffffff; font-weight: 600; transition: background-color .25s; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Mouseover / Mouseout</h1>
+    <p class="hint">Move the mouse over the boxes. The first box picks a random colour each time.</p>
+    <div class="box" id="box1">Hover me (random colour)</div>
+    <div class="box" id="box2">Hover me (fixed colour)</div>
+    <div class="out" id="out">Event: none</div>
+  </div>
+
+  <script>
+    const box1 = document.getElementById('box1');
+    const box2 = document.getElementById('box2');
+    const out  = document.getElementById('out');
+
+    function randomColor() {
+      return `hsl(${Math.floor(Math.random() * 360)}, 75%, 60%)`;
+    }
+
+    // Box 1: random colour on mouseover, back to white on mouseout
+    box1.addEventListener('mouseover', function () {
+      this.style.backgroundColor = randomColor();
+      out.textContent = 'Event: mouseover on box 1 -> ' + this.style.backgroundColor;
+    });
+    box1.addEventListener('mouseout', function () {
+      this.style.backgroundColor = '#ffffff';
+      out.textContent = 'Event: mouseout from box 1';
+    });
+
+    // Box 2: fixed colour
+    box2.addEventListener('mouseover', () => { box2.style.backgroundColor = '#fde047'; out.textContent = 'Event: mouseover on box 2'; });
+    box2.addEventListener('mouseout',  () => { box2.style.backgroundColor = '#ffffff'; out.textContent = 'Event: mouseout from box 2'; });
+  </script>
+</body>
+</html>

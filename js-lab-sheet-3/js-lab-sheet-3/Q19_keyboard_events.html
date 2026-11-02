@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 3
+     Q19. Write a script that captures keyboard events (keydown, keyup) and displays the
+     pressed key code and character on the screen.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q19 - Keyboard Events</title>
+  <style>
+
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #1f2937; }
+    .card { max-width: 640px; margin: 0 auto; background: #fff; padding: 26px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    h1 { margin: 0 0 6px; font-size: 1.45rem; color: #1d4ed8; }
+    p.hint { margin: 0 0 16px; color: #6b7280; font-size: .92rem; }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; }
+    input[type=text], input[type=number], input[type=password], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+    button { padding: 10px 20px; border: 0; border-radius: 8px; background: #1d4ed8; color: #fff; font: inherit; cursor: pointer; margin: 10px 8px 0 0; }
+    button:hover { background: #1e40af; }
+    button.secondary { background: #64748b; } button.danger { background: #dc2626; }
+    .out { margin-top: 18px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 48px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .92rem; }
+    .ok { color: #15803d; font-weight: 700; } .bad { color: #b91c1c; font-weight: 700; }
+    .keybox { margin: 16px 0; padding: 26px 10px; text-align: center; font-size: 2.6rem; font-weight: 700; background: #e2e8f0; border-radius: 10px; min-height: 100px; transition: background .15s; } .keybox.keydown { background: #bbf7d0; } .keybox.keyup { background: #fecaca; } table.info { width: 100%; border-collapse: collapse; } table.info th, table.info td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e2e8f0; } table.info th { width: 45%; color: #475569; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Keyboard Events</h1>
+    <p class="hint">Click anywhere on this page (or in the box) and press any key.</p>
+    <input type="text" id="field" placeholder="Type here...">
+    <div class="keybox" id="keybox">Press a key</div>
+    <table class="info">
+      <tr><th>Event</th><td id="evt">-</td></tr>
+      <tr><th>Character (event.key)</th><td id="key">-</td></tr>
+      <tr><th>Physical key (event.code)</th><td id="code">-</td></tr>
+      <tr><th>Key code (event.keyCode)</th><td id="kc">-</td></tr>
+      <tr><th>Modifiers</th><td id="mods">-</td></tr>
+    </table>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function show(e) {
+      $('evt').textContent  = e.type;                                  // keydown or keyup
+      $('key').textContent  = e.key === ' ' ? '(space)' : e.key;       // the character / key name
+      $('code').textContent = e.code;
+      $('kc').textContent   = e.keyCode + '  (deprecated, but widely used in older code)';
+      const mods = [e.ctrlKey && 'Ctrl', e.shiftKey && 'Shift', e.altKey && 'Alt', e.metaKey && 'Meta'].filter(Boolean);
+      $('mods').textContent = mods.length ? mods.join(' + ') : 'none';
+      $('keybox').textContent = e.key.length === 1 ? (e.key === ' ' ? '\u2423' : e.key) : e.key;   // big display
+      $('keybox').className = 'keybox ' + e.type;
+    }
+
+    document.addEventListener('keydown', show);
+    document.addEventListener('keyup', show);
+  </script>
+</body>
+</html>

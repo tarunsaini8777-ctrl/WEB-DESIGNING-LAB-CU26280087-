@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 3
+     Q17. Write a JavaScript function that counts the occurrences of vowels in a given
+     paragraph string.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q17 - Count Vowels</title>
+  <style>
+
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #1f2937; }
+    .card { max-width: 640px; margin: 0 auto; background: #fff; padding: 26px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    h1 { margin: 0 0 6px; font-size: 1.45rem; color: #1d4ed8; }
+    p.hint { margin: 0 0 16px; color: #6b7280; font-size: .92rem; }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; }
+    input[type=text], input[type=number], input[type=password], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+    button { padding: 10px 20px; border: 0; border-radius: 8px; background: #1d4ed8; color: #fff; font: inherit; cursor: pointer; margin: 10px 8px 0 0; }
+    button:hover { background: #1e40af; }
+    button.secondary { background: #64748b; } button.danger { background: #dc2626; }
+    .out { margin-top: 18px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 48px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .92rem; }
+    .ok { color: #15803d; font-weight: 700; } .bad { color: #b91c1c; font-weight: 700; }
+
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Vowel Counter</h1>
+    <label for="para">Paragraph</label>
+    <textarea id="para" rows="5" placeholder="Type or paste a paragraph here...">JavaScript is a versatile language used to make web pages interactive.</textarea>
+    <button id="go">Count vowels</button>
+    <div class="out" id="out">Result will appear here.</div>
+  </div>
+
+  <script>
+    function countVowels(text) {
+      const counts = { a: 0, e: 0, i: 0, o: 0, u: 0 };
+      let total = 0;
+      for (const ch of text.toLowerCase()) {           // loop over every character (case-insensitive)
+        if (ch in counts) { counts[ch]++; total++; }
+      }
+      return { counts, total };
+    }
+
+    document.getElementById('go').addEventListener('click', () => {
+      const text = document.getElementById('para').value;
+      const out = document.getElementById('out');
+      if (text.trim() === '') { out.textContent = 'Please enter a paragraph.'; return; }
+      const { counts, total } = countVowels(text);
+      const letters = (text.match(/[a-z]/gi) || []).length;
+      out.textContent =
+        `Total vowels : ${total}\n` +
+        `a: ${counts.a}   e: ${counts.e}   i: ${counts.i}   o: ${counts.o}   u: ${counts.u}\n` +
+        `Letters: ${letters}   Consonants: ${letters - total}`;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 3
+     Q7. Write a JavaScript program implementing a custom object representing a student with
+     properties and methods, demonstrating this keyword usage.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q7 - Student Object and this</title>
+  <style>
+
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #1f2937; }
+    .card { max-width: 640px; margin: 0 auto; background: #fff; padding: 26px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    h1 { margin: 0 0 6px; font-size: 1.45rem; color: #1d4ed8; }
+    p.hint { margin: 0 0 16px; color: #6b7280; font-size: .92rem; }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; }
+    input[type=text], input[type=number], input[type=password], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+    button { padding: 10px 20px; border: 0; border-radius: 8px; background: #1d4ed8; color: #fff; font: inherit; cursor: pointer; margin: 10px 8px 0 0; }
+    button:hover { background: #1e40af; }
+    button.secondary { background: #64748b; } button.danger { background: #dc2626; }
+    .out { margin-top: 18px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 48px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .92rem; }
+    .ok { color: #15803d; font-weight: 700; } .bad { color: #b91c1c; font-weight: 700; }
+
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Student Object and <code>this</code></h1>
+    <p class="hint">Output of the program (also printed in the console).</p>
+    <div class="out" id="out"></div>
+  </div>
+
+  <script>
+    const lines = [];
+    const print = (s) => { console.log(s); lines.push(s); };
+
+    // Object literal with properties and methods. Inside a method, `this` = the object that owns the method.
+    const student = {
+      name: 'Aman Verma',
+      rollNo: 'MC101',
+      course: 'MCA',
+      marks: [78, 85, 91],
+
+      introduce() { return `Hi, I am ${this.name} (${this.rollNo}) from ${this.course}.`; },
+      addMark(m)  { this.marks.push(m); return this; },                    // returning `this` allows chaining
+      average()   { return this.marks.reduce((s, m) => s + m, 0) / this.marks.length; },
+      grade()     { const a = this.average(); return a >= 85 ? 'A' : a >= 70 ? 'B' : 'C'; },
+
+      // An ARROW function has no `this` of its own, so `this` here is NOT the student.
+      brokenArrow: () => typeof this === 'object' && this !== student ? 'arrow: this is not the student' : 'unexpected',
+    };
+
+    print(student.introduce());
+    print('Average: ' + student.average().toFixed(2));
+    print('Grade  : ' + student.grade());
+    student.addMark(60).addMark(95);                                      // method chaining via `this`
+    print('After adding 2 marks: ' + student.marks.join(', ') + '  -> average ' + student.average().toFixed(2));
+    print(student.brokenArrow());
+
+    // Constructor function: `this` refers to the NEW object being created
+    function Student(name, rollNo, course) {
+      this.name = name;
+      this.rollNo = rollNo;
+      this.course = course;
+      this.greet = function () { return `Hello from ${this.name}`; };
+    }
+    const s2 = new Student('Neha Singh', 'MC102', 'BCA');
+    print(s2.greet());
+
+    // Losing `this`: copying a method into a variable detaches it from the object
+    const detached = student.introduce;
+    try { print('Detached call (this is lost, so properties are missing): ' + detached()); } catch (e) { print('Detached call fails: ' + e.message); }
+
+    // Fixing it with bind(), call() and apply()
+    print('bind  : ' + detached.bind(student)());
+    print('call  : ' + student.introduce.call(s2));            // run student's method with s2 as `this`
+
+    document.getElementById('out').textContent = lines.join('\n');
+  </script>
+</body>
+</html>

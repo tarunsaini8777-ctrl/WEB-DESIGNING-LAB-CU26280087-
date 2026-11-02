@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 3
+     Q9. Write a script that dynamically creates and appends new DOM elements (createElement,
+     appendChild) based on user text input.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q9 - Create DOM Elements Dynamically</title>
+  <style>
+
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #1f2937; }
+    .card { max-width: 640px; margin: 0 auto; background: #fff; padding: 26px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    h1 { margin: 0 0 6px; font-size: 1.45rem; color: #1d4ed8; }
+    p.hint { margin: 0 0 16px; color: #6b7280; font-size: .92rem; }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; }
+    input[type=text], input[type=number], input[type=password], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+    button { padding: 10px 20px; border: 0; border-radius: 8px; background: #1d4ed8; color: #fff; font: inherit; cursor: pointer; margin: 10px 8px 0 0; }
+    button:hover { background: #1e40af; }
+    button.secondary { background: #64748b; } button.danger { background: #dc2626; }
+    .out { margin-top: 18px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 48px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .92rem; }
+    .ok { color: #15803d; font-weight: 700; } .bad { color: #b91c1c; font-weight: 700; }
+    .container { margin-top: 18px; padding: 14px; border: 2px dashed #cbd5e1; border-radius: 8px; min-height: 80px; }
+    .container .created { margin: 8px 0; }
+    .container p.created { background: #eff6ff; padding: 8px 12px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Create Elements from Input</h1>
+    <label for="txt">Text for the new element</label>
+    <input type="text" id="txt" placeholder="Type something...">
+    <label for="kind">Element type</label>
+    <select id="kind">
+      <option value="p">Paragraph (p)</option>
+      <option value="h3">Heading (h3)</option>
+      <option value="li">List item (li)</option>
+      <option value="button">Button</option>
+    </select>
+    <button id="add">Create &amp; append</button>
+    <button id="clear" class="secondary">Clear all</button>
+    <div id="container" class="container"></div>
+  </div>
+
+  <script>
+    const txt = document.getElementById('txt');
+    const kind = document.getElementById('kind');
+    const container = document.getElementById('container');
+
+    document.getElementById('add').addEventListener('click', () => {
+      const text = txt.value.trim();
+      if (text === '') { txt.focus(); return; }
+
+      const el = document.createElement(kind.value);        // 1. create the element
+      el.textContent = text;                                // 2. set its content (textContent is XSS-safe)
+      el.className = 'created';
+
+      if (kind.value === 'li') {                            // list items need a <ul> parent
+        let ul = container.querySelector('ul');
+        if (!ul) { ul = document.createElement('ul'); container.appendChild(ul); }
+        ul.appendChild(el);                                 // 3. append to the DOM
+      } else {
+        container.appendChild(el);
+      }
+      txt.value = ''; txt.focus();
+    });
+
+    txt.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('add').click(); });
+    document.getElementById('clear').addEventListener('click', () => { container.replaceChildren(); });
+  </script>
+</body>
+</html>

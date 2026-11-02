@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 3
+     Q18. Implement a simple todo list application in JavaScript allowing users to add and
+     delete tasks from an unordered list.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q18 - Todo List</title>
+  <style>
+
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #1f2937; }
+    .card { max-width: 640px; margin: 0 auto; background: #fff; padding: 26px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    h1 { margin: 0 0 6px; font-size: 1.45rem; color: #1d4ed8; }
+    p.hint { margin: 0 0 16px; color: #6b7280; font-size: .92rem; }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; }
+    input[type=text], input[type=number], input[type=password], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+    button { padding: 10px 20px; border: 0; border-radius: 8px; background: #1d4ed8; color: #fff; font: inherit; cursor: pointer; margin: 10px 8px 0 0; }
+    button:hover { background: #1e40af; }
+    button.secondary { background: #64748b; } button.danger { background: #dc2626; }
+    .out { margin-top: 18px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 48px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .92rem; }
+    .ok { color: #15803d; font-weight: 700; } .bad { color: #b91c1c; font-weight: 700; }
+    .row { display: flex; gap: 8px; } .row button { margin: 0; } ul.todo { list-style: none; padding: 0; margin: 16px 0 0; } ul.todo li { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; margin-bottom: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; } ul.todo li span { flex: 1; cursor: pointer; } ul.todo li.done span { text-decoration: line-through; color: #9ca3af; } button.small { padding: 6px 12px; margin: 0 0 0 10px; font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Todo List</h1>
+    <div class="row">
+      <input type="text" id="task" placeholder="Add a new task...">
+      <button id="add">Add</button>
+    </div>
+    <ul id="list" class="todo"></ul>
+    <p class="hint" id="count"></p>
+  </div>
+
+  <script>
+    const input = document.getElementById('task');
+    const list  = document.getElementById('list');
+    const countEl = document.getElementById('count');
+
+    function updateCount() {
+      const total = list.children.length;
+      const done = list.querySelectorAll('li.done').length;
+      countEl.textContent = total === 0 ? 'No tasks yet.' : `${total} task(s), ${done} completed`;
+    }
+
+    function addTask() {
+      const text = input.value.trim();
+      if (text === '') { input.focus(); return; }
+
+      const li = document.createElement('li');
+      const span = document.createElement('span');
+      span.textContent = text;
+      span.addEventListener('click', () => { li.classList.toggle('done'); updateCount(); });   // click text = mark done
+
+      const del = document.createElement('button');
+      del.textContent = 'Delete';
+      del.className = 'danger small';
+      del.addEventListener('click', () => { li.remove(); updateCount(); });                     // delete task
+
+      li.append(span, del);
+      list.appendChild(li);
+      input.value = ''; input.focus();
+      updateCount();
+    }
+
+    document.getElementById('add').addEventListener('click', addTask);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+    updateCount();
+  </script>
+</body>
+</html>

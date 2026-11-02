@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 3
+     Q16. Create a dynamic image gallery slider using JavaScript arrays to cycle through
+     image sources upon clicking 'Next' and 'Previous' buttons.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q16 - Image Gallery Slider</title>
+  <style>
+
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #1f2937; }
+    .card { max-width: 640px; margin: 0 auto; background: #fff; padding: 26px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    h1 { margin: 0 0 6px; font-size: 1.45rem; color: #1d4ed8; }
+    p.hint { margin: 0 0 16px; color: #6b7280; font-size: .92rem; }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; }
+    input[type=text], input[type=number], input[type=password], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+    button { padding: 10px 20px; border: 0; border-radius: 8px; background: #1d4ed8; color: #fff; font: inherit; cursor: pointer; margin: 10px 8px 0 0; }
+    button:hover { background: #1e40af; }
+    button.secondary { background: #64748b; } button.danger { background: #dc2626; }
+    .out { margin-top: 18px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 48px; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .92rem; }
+    .ok { color: #15803d; font-weight: 700; } .bad { color: #b91c1c; font-weight: 700; }
+    .slider { position: relative; margin-top: 12px; } .slider img { width: 100%; border-radius: 10px; display: block; } .caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px; background: rgba(0,0,0,.45); color: #fff; text-align: center; border-radius: 0 0 10px 10px; } .controls { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; } .controls button { margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Image Gallery</h1>
+    <div class="slider">
+      <img id="photo" alt="Gallery image">
+      <div class="caption" id="caption"></div>
+    </div>
+    <div class="controls">
+      <button id="prev" class="secondary">&laquo; Previous</button>
+      <span id="counter"></span>
+      <button id="next">Next &raquo;</button>
+    </div>
+  </div>
+
+  <script>
+    // ARRAY of image sources. Here they are generated SVG images (data URIs), so the page works offline.
+    // To use your own pictures, replace the src values with file names such as 'images/photo1.jpg'.
+    function makeImage(color1, color2, label) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="560" height="320">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${color1}"/><stop offset="1" stop-color="${color2}"/></linearGradient></defs>
+        <rect width="560" height="320" fill="url(#g)"/>
+        <text x="280" y="170" font-size="42" font-family="Arial" fill="white" text-anchor="middle">${label}</text></svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    const images = [
+      { src: makeImage('#f97316', '#dc2626', 'Sunset'),   caption: 'Sunset' },
+      { src: makeImage('#22c55e', '#0f766e', 'Forest'),   caption: 'Forest' },
+      { src: makeImage('#38bdf8', '#1d4ed8', 'Ocean'),    caption: 'Ocean' },
+      { src: makeImage('#a78bfa', '#7e22ce', 'Twilight'), caption: 'Twilight' },
+      { src: makeImage('#fde047', '#ca8a04', 'Desert'),   caption: 'Desert' }
+    ];
+
+    let index = 0;
+    const photo = document.getElementById('photo');
+
+    function show() {
+      photo.src = images[index].src;
+      photo.alt = images[index].caption;
+      document.getElementById('caption').textContent = images[index].caption;
+      document.getElementById('counter').textContent = `${index + 1} / ${images.length}`;
+    }
+    document.getElementById('next').addEventListener('click', () => { index = (index + 1) % images.length; show(); });                    // wraps to first
+    document.getElementById('prev').addEventListener('click', () => { index = (index - 1 + images.length) % images.length; show(); });    // wraps to last
+    document.addEventListener('keydown', e => { if (e.key === 'ArrowRight') document.getElementById('next').click(); if (e.key === 'ArrowLeft') document.getElementById('prev').click(); });
+    show();
+  </script>
+</body>
+</html>
