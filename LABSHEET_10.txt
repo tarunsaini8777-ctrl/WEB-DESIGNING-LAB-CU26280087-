@@ -1,0 +1,1298 @@
+# MCA108P-AS10 - PHP MVC Project Codes
+
+Har file ka path heading mein hai, neeche uska code.
+
+
+## `config/config.php`
+
+```php
+<?php
+// Task 3/20: central config. Use the LIMITED MySQL user, never root.
+return [
+    'app_url' => 'https://myproject.local',
+    'db' => [
+        'host' => '127.0.0.1',
+        'name' => 'myproject',
+        'user' => 'myproject_user',
+        'pass' => 'StrongPass@123',
+        'charset' => 'utf8mb4',
+    ],
+    'mail' => [
+        'host' => 'smtp.gmail.com',
+        'port' => 587,
+        'user' => 'your_email@gmail.com',
+        'pass' => 'your_app_password',
+        'from' => 'your_email@gmail.com',
+        'name' => 'My Project',
+    ],
+    'upload' => [
+        'dir' => __DIR__ . '/../storage/uploads/',
+        'max_size' => 2 * 1024 * 1024,
+        'allowed' => ['image/jpeg' => 'jpg', 'image/png' => 'png', 'application/pdf' => 'pdf'],
+    ],
+    'max_attempts' => 5,
+    'lock_minutes' => 15,
+];
+```
+
+
+## `core/Controller.php`
+
+```php
+<?php
+// Task 6: base controller - renders views inside header/footer and passes data
+abstract class Controller
+{
+    protected function view(string $name, array $data = []): void
+    {
+        extract($data);
+        $viewFile = __DIR__ . "/../views/$name.php";
+        require __DIR__ . '/../views/layouts/header.php';
+        require $viewFile;
+        require __DIR__ . '/../views/layouts/footer.php';
+    }
+
+    protected function json($data, int $code = 200): void
+    {
+        http_response_code($code);
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit;
+    }
+
+    protected function redirect(string $path): void
+    {
+        header("Location: $path");
+        exit;
+    }
+}
+```
+
+
+## `core/Csrf.php`
+
+```php
+<?php
+// Task 9: CSRF token generate / store / validate
+class Csrf
+{
+    public static function token(): string
+    {
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
+    }
+
+    public static function field(): string
+    {
+        return '<input type="hidden" name="csrf_token" value="' . self::token() . '">';
+    }
+
+    public static function verify(?string $token): bool
+    {
+        return !empty($_SESSION['csrf_token']) && is_string($token)
+            && hash_equals($_SESSION['csrf_token'], $token);
+    }
+
+    public static function protect(): void
+    {
+        if (!self::verify($_POST['csrf_token'] ?? null)) {
+            http_response_code(403);
+            exit('Invalid CSRF token.');
+        }
+    }
+}
+```
+
+
+## `core/Database.php`
+
+```php
+<?php
+// Task 5: PDO singleton
+class Database
+{
+    private static ?Database $instance = null;
+    private PDO $pdo;
+
+    private function __construct()
+    {
+        $c = (require __DIR__ . '/../config/config.php')['db'];
+        $dsn = "mysql:host={$c['host']};dbname={$c['name']};charset={$c['charset']}";
+        $this->pdo = new PDO($dsn, $c['user'], $c['pass'], [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]);
+    }
+
+    private function __clone() {}
+
+    public static function getInstance(): PDO
+    {
+        if (self::$instance === null) {
+            self::$instance = new Database();
+        }
+        return self::$instance->pdo;
+    }
+}
+```
+
+
+## `core/Model.php`
+
+```php
+<?php
+// Task 5: reusable CRUD base model
+abstract class Model
+{
+    protected string $table;
+    protected PDO $db;
+
+    public function __construct()
+    {
+        $this->db = Database::getInstance();
+    }
+
+    public function all(): array
+    {
+        return $this->db->query("SELECT * FROM {$this->table} ORDER BY id DESC")->fetchAll();
+    }
+
+    public function find(int $id): ?array
+    {
+        $st = $this->db->prepare("SELECT * FROM {$this->table} WHERE id = ?");
+        $st->execute([$id]);
+        return $st->fetch() ?: null;
+    }
+
+    public function create(array $data): int
+    {
+        $cols = implode(',', array_keys($data));
+        $ph = implode(',', array_fill(0, count($data), '?'));
+        $st = $this->db->prepare("INSERT INTO {$this->table} ($cols) VALUES ($ph)");
+        $st->execute(array_values($data));
+        return (int)$this->db->lastInsertId();
+    }
+
+    public function update(int $id, array $data): bool
+    {
+        $set = implode(',', array_map(fn($c) => "$c = ?", array_keys($data)));
+        $st = $this->db->prepare("UPDATE {$this->table} SET $set WHERE id = ?");
+        return $st->execute([...array_values($data), $id]);
+    }
+
+    public function delete(int $id): bool
+    {
+        $st = $this->db->prepare("DELETE FROM {$this->table} WHERE id = ?");
+        return $st->execute([$id]);
+    }
+}
+```
+
+
+## `core/Router.php`
+
+```php
+<?php
+// Task 4: simple router  (METHOD + path -> Controller@action)
+class Router
+{
+    private array $routes = [];
+
+    public function add(string $method, string $path, array $handler): void
+    {
+        $this->routes[] = [$method, $path, $handler];
+    }
+
+    public function dispatch(string $method, string $uri): void
+    {
+        $path = rtrim(parse_url($uri, PHP_URL_PATH), '/') ?: '/';
+        foreach ($this->routes as [$m, $p, $handler]) {
+            $regex = '#^' . preg_replace('#\{(\w+)\}#', '(?P<$1>[^/]+)', $p) . '$#';
+            if ($m === $method && preg_match($regex, $path, $match)) {
+                $params = array_filter($match, 'is_string', ARRAY_FILTER_USE_KEY);
+                [$class, $action] = $handler;
+                (new $class())->$action(...array_values($params));
+                return;
+            }
+        }
+        http_response_code(404);
+        require __DIR__ . '/../views/errors/404.php';
+    }
+}
+```
+
+
+## `core/Session.php`
+
+```php
+<?php
+// Task 10: secure session settings
+class Session
+{
+    public static function start(): void
+    {
+        $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        ini_set('session.use_strict_mode', '1');
+        ini_set('session.use_only_cookies', '1');
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => '/',
+            'secure' => $https,      // only over HTTPS
+            'httponly' => true,      // not readable by JavaScript
+            'samesite' => 'Strict',  // CSRF hardening
+        ]);
+        session_start();
+    }
+
+    public static function login(array $user): void
+    {
+        session_regenerate_id(true); // prevent session fixation
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_name'] = $user['name'];
+    }
+
+    public static function logout(): void
+    {
+        $_SESSION = [];
+        session_destroy();
+    }
+
+    public static function check(): bool
+    {
+        return isset($_SESSION['user_id']);
+    }
+}
+```
+
+
+## `core/Validator.php`
+
+```php
+<?php
+// Task 11: validate + sanitize with filter_var
+class Validator
+{
+    public static function email(string $v): string|false
+    {
+        return filter_var(trim($v), FILTER_VALIDATE_EMAIL);
+    }
+
+    public static function url(string $v): string|false
+    {
+        return filter_var(trim($v), FILTER_VALIDATE_URL);
+    }
+
+    public static function int(mixed $v): int|false
+    {
+        return filter_var($v, FILTER_VALIDATE_INT);
+    }
+
+    public static function float(mixed $v): float|false
+    {
+        return filter_var($v, FILTER_VALIDATE_FLOAT);
+    }
+
+    // strip tags + special chars (sanitize strings)
+    public static function string(string $v): string
+    {
+        return htmlspecialchars(strip_tags(trim($v)), ENT_QUOTES, 'UTF-8');
+    }
+}
+```
+
+
+## `.gitignore`
+
+```
+# Dependencies
+/vendor/
+# Secrets / local config
+/config/config.local.php
+.env
+# Logs and uploads
+/storage/logs/*
+/storage/uploads/*
+!/storage/logs/.gitkeep
+!/storage/uploads/.gitkeep
+# SSL keys
+*.key
+*.pem
+*.crt
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+```
+
+
+## `composer.json`
+
+```json
+{
+    "name": "student/myproject",
+    "description": "PHP MVC project - Web Designing Lab (MCA108P-AS10)",
+    "require": {
+        "php": ">=8.1",
+        "phpmailer/phpmailer": "^6.9"
+    }
+}
+```
+
+
+## `controllers/ApiController.php`
+
+```php
+<?php
+// Task 7 + 8: RESTful JSON API with token authentication
+class ApiController extends Controller
+{
+    private Product $products;
+    private User $users;
+
+    public function __construct()
+    {
+        $this->products = new Product();
+        $this->users = new User();
+    }
+
+    private function body(): array
+    {
+        return json_decode(file_get_contents('php://input'), true) ?? [];
+    }
+
+    private function authenticate(): void
+    {
+        $h = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        if (!preg_match('/^Bearer\s+(\S+)$/', $h, $m) || !$this->users->findByToken($m[1])) {
+            $this->json(['error' => 'Unauthorized'], 401);
+        }
+    }
+
+    // POST /api/login  -> returns token
+    public function login(): void
+    {
+        $d = $this->body();
+        $email = Validator::email($d['email'] ?? '');
+        $user = $email ? $this->users->findByEmail($email) : null;
+        if (!$user || $this->users->isLocked($user) || !password_verify($d['password'] ?? '', $user['password'])) {
+            $this->json(['error' => 'Invalid credentials'], 401);
+        }
+        $this->json(['token' => $this->users->issueApiToken($user['id'])]);
+    }
+
+    public function index(): void
+    {
+        $this->authenticate();
+        $this->json($this->products->all());
+    }
+
+    public function show(string $id): void
+    {
+        $this->authenticate();
+        $p = $this->products->find((int)$id);
+        $p ? $this->json($p) : $this->json(['error' => 'Not found'], 404);
+    }
+
+    private function clean(array $d): array|false
+    {
+        $name = Validator::string($d['name'] ?? '');
+        $price = Validator::float($d['price'] ?? null);
+        if ($name === '' || $price === false || $price < 0) {
+            return false;
+        }
+        return ['name' => $name, 'price' => $price, 'description' => Validator::string($d['description'] ?? '')];
+    }
+
+    public function store(): void
+    {
+        $this->authenticate();
+        $data = $this->clean($this->body());
+        if (!$data) $this->json(['error' => 'Invalid input'], 422);
+        $this->json(['id' => $this->products->create($data)], 201);
+    }
+
+    public function update(string $id): void
+    {
+        $this->authenticate();
+        if (!$this->products->find((int)$id)) $this->json(['error' => 'Not found'], 404);
+        $data = $this->clean($this->body());
+        if (!$data) $this->json(['error' => 'Invalid input'], 422);
+        $this->products->update((int)$id, $data);
+        $this->json(['updated' => true]);
+    }
+
+    public function destroy(string $id): void
+    {
+        $this->authenticate();
+        if (!$this->products->find((int)$id)) $this->json(['error' => 'Not found'], 404);
+        $this->products->delete((int)$id);
+        $this->json(['deleted' => true]);
+    }
+}
+```
+
+
+## `controllers/AuthController.php`
+
+```php
+<?php
+class AuthController extends Controller
+{
+    private User $users;
+    private array $cfg;
+
+    public function __construct()
+    {
+        $this->users = new User();
+        $this->cfg = require __DIR__ . '/../config/config.php';
+    }
+
+    // ---------- Register (Task 11 + 14) ----------
+    public function registerForm(): void
+    {
+        $this->view('auth/register', ['title' => 'Register', 'error' => null]);
+    }
+
+    public function register(): void
+    {
+        Csrf::protect();
+        $name = Validator::string($_POST['name'] ?? '');
+        $email = Validator::email($_POST['email'] ?? '');
+        $pass = $_POST['password'] ?? '';
+
+        if ($name === '' || !$email || strlen($pass) < 8) {
+            $this->view('auth/register', ['title' => 'Register', 'error' => 'Enter a name, valid email and 8+ char password.']);
+            return;
+        }
+        if ($this->users->findByEmail($email)) {
+            $this->view('auth/register', ['title' => 'Register', 'error' => 'Email already registered.']);
+            return;
+        }
+        $this->users->create([
+            'name' => $name,
+            'email' => $email,
+            'password' => password_hash($pass, PASSWORD_DEFAULT),
+        ]);
+        Mailer::send($email, 'Welcome!', "<h3>Hello $name</h3><p>Your registration is confirmed.</p>");
+        $this->redirect('/login?registered=1');
+    }
+
+    // ---------- Login (Task 10 + 12) ----------
+    public function loginForm(): void
+    {
+        $this->view('auth/login', ['title' => 'Login', 'error' => null]);
+    }
+
+    public function login(): void
+    {
+        Csrf::protect();
+        $email = Validator::email($_POST['email'] ?? '');
+        $pass = $_POST['password'] ?? '';
+        $user = $email ? $this->users->findByEmail($email) : null;
+        $error = 'Invalid email or password.';
+
+        if ($user && $this->users->isLocked($user)) {
+            $error = "Account locked. Try again after {$user['locked_until']}.";
+        } elseif ($user && password_verify($pass, $user['password'])) {
+            $this->users->clearFailures($user['id']);
+            Session::login($user); // regenerates session id
+            $this->redirect('/');
+        } elseif ($user) {
+            $this->users->registerFailure($user, $this->cfg['max_attempts'], $this->cfg['lock_minutes']);
+        }
+        $this->view('auth/login', ['title' => 'Login', 'error' => $error]);
+    }
+
+    public function logout(): void
+    {
+        Session::logout();
+        $this->redirect('/login');
+    }
+
+    // ---------- Forgot password (Task 13) ----------
+    public function forgotForm(): void
+    {
+        $this->view('auth/forgot', ['title' => 'Forgot Password', 'msg' => null]);
+    }
+
+    public function forgot(): void
+    {
+        Csrf::protect();
+        $email = Validator::email($_POST['email'] ?? '');
+        $user = $email ? $this->users->findByEmail($email) : null;
+        if ($user) {
+            $token = $this->users->createResetToken($user['id']);
+            $link = $this->cfg['app_url'] . '/reset-password/' . $token;
+            Mailer::send($email, 'Password reset', "<p>Click to reset (valid 1 hour): <a href='$link'>$link</a></p>");
+        }
+        // same message either way (does not reveal which emails exist)
+        $this->view('auth/forgot', ['title' => 'Forgot Password', 'msg' => 'If that email exists, a reset link has been sent.']);
+    }
+
+    public function resetForm(string $token): void
+    {
+        $valid = $this->users->findValidReset($token) !== null;
+        $this->view('auth/reset', ['title' => 'Reset Password', 'token' => $token, 'valid' => $valid, 'error' => null]);
+    }
+
+    public function reset(string $token): void
+    {
+        Csrf::protect();
+        $reset = $this->users->findValidReset($token);
+        $pass = $_POST['password'] ?? '';
+        if (!$reset || strlen($pass) < 8) {
+            $this->view('auth/reset', ['title' => 'Reset Password', 'token' => $token, 'valid' => (bool)$reset, 'error' => 'Invalid link or password too short.']);
+            return;
+        }
+        $this->users->resetPassword($reset, $pass);
+        $this->redirect('/login?reset=1');
+    }
+}
+```
+
+
+## `controllers/HomeController.php`
+
+```php
+<?php
+class HomeController extends Controller
+{
+    public function index(): void
+    {
+        // Task 6: pass data to view
+        $this->view('pages/home', ['title' => 'Home', 'message' => 'Welcome to My Project (MVC in PHP)']);
+    }
+
+    public function products(): void
+    {
+        $this->view('pages/products', ['title' => 'Products']);
+    }
+
+    public function crash(): void
+    {
+        throw new Exception('Test 500 error'); // visit /crash to test the 500 page
+    }
+}
+```
+
+
+## `controllers/UploadController.php`
+
+```php
+<?php
+// Task 15: secure file upload
+class UploadController extends Controller
+{
+    public function form(): void
+    {
+        $this->view('pages/upload', ['title' => 'Upload', 'msg' => null]);
+    }
+
+    public function handle(): void
+    {
+        Csrf::protect();
+        $cfg = (require __DIR__ . '/../config/config.php')['upload'];
+        $f = $_FILES['file'] ?? null;
+        $msg = null;
+
+        if (!$f || $f['error'] !== UPLOAD_ERR_OK) {
+            $msg = 'Upload failed.';
+        } elseif ($f['size'] > $cfg['max_size']) {
+            $msg = 'File too large (max 2 MB).';
+        } else {
+            $mime = (new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']); // real MIME, not client-sent
+            if (!isset($cfg['allowed'][$mime])) {
+                $msg = 'File type not allowed.';
+            } else {
+                $newName = bin2hex(random_bytes(16)) . '.' . $cfg['allowed'][$mime]; // rename
+                $msg = move_uploaded_file($f['tmp_name'], $cfg['dir'] . $newName)
+                    ? "Uploaded as $newName" : 'Could not save file.';
+            }
+        }
+        $this->view('pages/upload', ['title' => 'Upload', 'msg' => $msg]);
+    }
+}
+```
+
+
+## `database/schema.sql`
+
+```sql
+-- Task 5/7/12/13/20
+CREATE DATABASE IF NOT EXISTS myproject CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE myproject;
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    api_token CHAR(64) NULL,
+    failed_attempts INT NOT NULL DEFAULT 0,
+    locked_until DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    description TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token_hash CHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used TINYINT(1) NOT NULL DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+INSERT INTO products (name, price, description) VALUES
+ ('Keyboard', 1200.00, 'Mechanical keyboard'),
+ ('Mouse', 600.00, 'Wireless mouse');
+
+-- Task 20: limited-privilege MySQL user (NOT root)
+CREATE USER IF NOT EXISTS 'myproject_user'@'localhost' IDENTIFIED BY 'StrongPass@123';
+GRANT SELECT, INSERT, UPDATE, DELETE ON myproject.* TO 'myproject_user'@'localhost';
+FLUSH PRIVILEGES;
+-- Check: SHOW GRANTS FOR 'myproject_user'@'localhost';
+```
+
+
+## `docs/GIT_STEPS.md`
+
+````markdown
+# Git commands (Tasks 1 & 2)
+
+## Task 1: init, .gitignore, logical commits
+```bash
+cd myproject
+git init
+git branch -M main
+
+git add .gitignore README.md composer.json
+git commit -m "Add .gitignore, README and composer.json"
+
+git add config core
+git commit -m "Add config and core classes (Database, Router, Session, Csrf, Validator)"
+
+git add models controllers helpers
+git commit -m "Add models, controllers and mailer helper"
+
+git add views public
+git commit -m "Add views, front controller, JS and CSS"
+
+git add database docs
+git commit -m "Add database schema and documentation"
+```
+
+## Task 2: feature branch + deliberate merge conflict + push
+```bash
+git checkout -b feature/footer-text
+# edit views/layouts/footer.php  -> change the footer text, e.g. "Built by Student A"
+git add . && git commit -m "Feature: change footer text"
+
+git checkout main
+# edit the SAME line in views/layouts/footer.php differently, e.g. "Built by Kanika"
+git add . && git commit -m "Main: change footer text"
+
+git merge feature/footer-text
+# CONFLICT! open footer.php, keep the correct line, delete <<<<<<< ======= >>>>>>> markers
+git add views/layouts/footer.php
+git commit -m "Resolve merge conflict in footer"
+
+git log --oneline --graph
+```
+
+## Push to GitHub
+Create an empty repo on GitHub first, then:
+```bash
+git remote add origin https://github.com/<your-username>/<repo-name>.git
+git push -u origin main
+git push origin feature/footer-text
+```
+````
+
+
+## `docs/SETUP_COMMANDS.md`
+
+````markdown
+# Setup commands (Tasks 17 - 20)
+
+## Task 19: hosts file
+Add this line (needs admin rights)
+- Windows: `C:\Windows\System32\drivers\etc\hosts`
+- Linux/Mac: `/etc/hosts`
+
+```
+127.0.0.1   myproject.local
+```
+
+## Task 18: self-signed SSL certificate
+```bash
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout myproject.key -out myproject.crt \
+  -subj "/C=IN/ST=Punjab/L=Mohali/O=MyProject/CN=myproject.local"
+```
+Copy the files to the paths used in `apache-vhost.conf`, then:
+```bash
+sudo a2enmod ssl rewrite headers
+sudo a2ensite myproject.conf
+sudo systemctl restart apache2
+```
+XAMPP: uncomment `LoadModule ssl_module` and `LoadModule rewrite_module` in httpd.conf, include the vhost file, restart Apache.
+
+Open: https://myproject.local  (browser will warn about self-signed cert - Advanced > Continue)
+
+## Task 20: MySQL limited user
+```bash
+mysql -u root -p < database/schema.sql
+mysql -u root -p -e "SHOW GRANTS FOR 'myproject_user'@'localhost';"
+```
+
+## Task 14: PHPMailer
+```bash
+composer install
+```
+Edit `config/config.php` mail settings (Gmail needs an App Password).
+
+## Task 16: error logging
+Errors are written to `storage/logs/php_error.log`; visitors see `views/errors/500.php`.
+Test: open `/crash` (500 page) and `/abc` (404 page).
+
+## Test API with curl (Tasks 7/8)
+```bash
+# register a user from the website first, then:
+curl -k -X POST https://myproject.local/api/login -H "Content-Type: application/json" \
+  -d '{"email":"you@mail.com","password":"yourpass123"}'
+
+TOKEN=PASTE_TOKEN_HERE
+curl -k https://myproject.local/api/products -H "Authorization: Bearer $TOKEN"
+curl -k -X POST https://myproject.local/api/products -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" -d '{"name":"Pen","price":10,"description":"Blue"}'
+curl -k -X PUT https://myproject.local/api/products/1 -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" -d '{"name":"Pen","price":12}'
+curl -k -X DELETE https://myproject.local/api/products/1 -H "Authorization: Bearer $TOKEN"
+```
+````
+
+
+## `docs/apache-vhost.conf`
+
+```apache
+# Task 19 + 18: virtual host with HTTPS  (myproject.local)
+# Put in: sites-available/myproject.conf (Linux)  OR  httpd-vhosts.conf (XAMPP)
+# Change the paths to your own project folder.
+
+<VirtualHost *:80>
+    ServerName myproject.local
+    Redirect permanent / https://myproject.local/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName myproject.local
+    DocumentRoot "/var/www/myproject/public"
+
+    SSLEngine on
+    SSLCertificateFile    "/etc/ssl/certs/myproject.crt"
+    SSLCertificateKeyFile "/etc/ssl/private/myproject.key"
+
+    <Directory "/var/www/myproject/public">
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog  "/var/log/apache2/myproject-error.log"
+    CustomLog "/var/log/apache2/myproject-access.log" combined
+</VirtualHost>
+```
+
+
+## `helpers/Mailer.php`
+
+```php
+<?php
+// Task 14: PHPMailer over SMTP  (composer require phpmailer/phpmailer)
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+class Mailer
+{
+    public static function send(string $to, string $subject, string $html): bool
+    {
+        $c = (require __DIR__ . '/../config/config.php')['mail'];
+        $mail = new PHPMailer(true);
+        try {
+            $mail->isSMTP();
+            $mail->Host = $c['host'];
+            $mail->SMTPAuth = true;
+            $mail->Username = $c['user'];
+            $mail->Password = $c['pass'];
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = $c['port'];
+            $mail->setFrom($c['from'], $c['name']);
+            $mail->addAddress($to);
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body = $html;
+            $mail->send();
+            return true;
+        } catch (Exception $e) {
+            error_log('Mailer error: ' . $mail->ErrorInfo);
+            return false;
+        }
+    }
+}
+```
+
+
+## `models/Product.php`
+
+```php
+<?php
+class Product extends Model
+{
+    protected string $table = 'products';
+}
+```
+
+
+## `models/User.php`
+
+```php
+<?php
+class User extends Model
+{
+    protected string $table = 'users';
+
+    public function findByEmail(string $email): ?array
+    {
+        $st = $this->db->prepare('SELECT * FROM users WHERE email = ?');
+        $st->execute([$email]);
+        return $st->fetch() ?: null;
+    }
+
+    public function findByToken(string $token): ?array
+    {
+        $st = $this->db->prepare('SELECT * FROM users WHERE api_token = ?');
+        $st->execute([hash('sha256', $token)]);
+        return $st->fetch() ?: null;
+    }
+
+    public function issueApiToken(int $id): string
+    {
+        $token = bin2hex(random_bytes(32));
+        $this->update($id, ['api_token' => hash('sha256', $token)]);
+        return $token;
+    }
+
+    // Task 12: login attempt limiter
+    public function registerFailure(array $user, int $max, int $minutes): void
+    {
+        $n = $user['failed_attempts'] + 1;
+        if ($n >= $max) {
+            $this->update($user['id'], [
+                'failed_attempts' => 0,
+                'locked_until' => date('Y-m-d H:i:s', time() + $minutes * 60),
+            ]);
+        } else {
+            $this->update($user['id'], ['failed_attempts' => $n]);
+        }
+    }
+
+    public function clearFailures(int $id): void
+    {
+        $this->update($id, ['failed_attempts' => 0, 'locked_until' => null]);
+    }
+
+    public function isLocked(array $user): bool
+    {
+        return !empty($user['locked_until']) && strtotime($user['locked_until']) > time();
+    }
+
+    // Task 13: forgot password
+    public function createResetToken(int $userId): string
+    {
+        $token = bin2hex(random_bytes(32));
+        $st = $this->db->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?,?,?)');
+        $st->execute([$userId, hash('sha256', $token), date('Y-m-d H:i:s', time() + 3600)]);
+        return $token;
+    }
+
+    public function findValidReset(string $token): ?array
+    {
+        $st = $this->db->prepare('SELECT * FROM password_resets WHERE token_hash = ? AND expires_at > NOW() AND used = 0');
+        $st->execute([hash('sha256', $token)]);
+        return $st->fetch() ?: null;
+    }
+
+    public function resetPassword(array $reset, string $newPassword): void
+    {
+        $this->update($reset['user_id'], ['password' => password_hash($newPassword, PASSWORD_DEFAULT)]);
+        $this->db->prepare('UPDATE password_resets SET used = 1 WHERE id = ?')->execute([$reset['id']]);
+    }
+}
+```
+
+
+## `public/.htaccess`
+
+```apache
+# Task 17: clean URLs, force HTTPS, no directory listing
+Options -Indexes
+DirectoryIndex index.php
+
+RewriteEngine On
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Pass Authorization header to PHP (needed for Bearer token)
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%1]
+
+# Clean URLs -> front controller
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L]
+
+# Task 16: custom error pages for Apache-level errors
+ErrorDocument 404 /index.php
+```
+
+
+## `public/css/style.css`
+
+```css
+body{font-family:Arial,sans-serif;margin:0;background:#f5f6fa;color:#222}
+.nav{background:#2d3436;padding:12px 20px;display:flex;gap:16px;align-items:center}
+.nav a,.nav span{color:#fff;text-decoration:none}
+.container{max-width:900px;margin:30px auto;padding:20px;background:#fff;border-radius:8px}
+input,button{padding:8px;margin:4px 0}
+form input{display:block;width:260px}
+button{cursor:pointer}
+.footer{text-align:center;color:#777;padding:20px}
+table{border-collapse:collapse;margin-top:15px;width:100%}
+```
+
+
+## `public/index.php`
+
+```php
+<?php
+// Task 4: FRONT CONTROLLER - every request enters here
+
+// Task 16: log errors, hide from visitors
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+ini_set('error_log', __DIR__ . '/../storage/logs/php_error.log');
+error_reporting(E_ALL);
+
+set_exception_handler(function (Throwable $e) {
+    error_log($e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    http_response_code(500);
+    require __DIR__ . '/../views/errors/500.php';
+});
+
+// Autoloader
+spl_autoload_register(function (string $class) {
+    foreach (['core', 'models', 'controllers', 'helpers'] as $dir) {
+        $file = __DIR__ . "/../$dir/$class.php";
+        if (is_file($file)) { require $file; return; }
+    }
+});
+
+Session::start();
+
+$router = new Router();
+$router->add('GET',  '/',                      [HomeController::class, 'index']);
+$router->add('GET',  '/products',              [HomeController::class, 'products']);
+$router->add('GET',  '/crash',                 [HomeController::class, 'crash']);
+
+$router->add('GET',  '/register',              [AuthController::class, 'registerForm']);
+$router->add('POST', '/register',              [AuthController::class, 'register']);
+$router->add('GET',  '/login',                 [AuthController::class, 'loginForm']);
+$router->add('POST', '/login',                 [AuthController::class, 'login']);
+$router->add('GET',  '/logout',                [AuthController::class, 'logout']);
+$router->add('GET',  '/forgot-password',       [AuthController::class, 'forgotForm']);
+$router->add('POST', '/forgot-password',       [AuthController::class, 'forgot']);
+$router->add('GET',  '/reset-password/{token}',[AuthController::class, 'resetForm']);
+$router->add('POST', '/reset-password/{token}',[AuthController::class, 'reset']);
+
+$router->add('GET',  '/upload',                [UploadController::class, 'form']);
+$router->add('POST', '/upload',                [UploadController::class, 'handle']);
+
+// REST API
+$router->add('POST',   '/api/login',           [ApiController::class, 'login']);
+$router->add('GET',    '/api/products',        [ApiController::class, 'index']);
+$router->add('GET',    '/api/products/{id}',   [ApiController::class, 'show']);
+$router->add('POST',   '/api/products',        [ApiController::class, 'store']);
+$router->add('PUT',    '/api/products/{id}',   [ApiController::class, 'update']);
+$router->add('DELETE', '/api/products/{id}',   [ApiController::class, 'destroy']);
+
+$router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
+```
+
+
+## `public/js/app.js`
+
+```javascript
+// Task 8: consume the secured API with fetch()
+const API = '/api/products';
+let token = sessionStorage.getItem('api_token');
+const $ = id => document.getElementById(id);
+const status = msg => ($('status').textContent = msg);
+
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+}
+
+async function login() {
+  const res = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: $('email').value, password: $('password').value })
+  });
+  const data = await res.json();
+  if (!res.ok) return status(data.error || 'Login failed');
+  token = data.token;
+  sessionStorage.setItem('api_token', token);
+  showCrud();
+}
+
+async function loadProducts() {
+  const res = await fetch(API, { headers: authHeaders() });
+  if (!res.ok) { sessionStorage.removeItem('api_token'); return status('Unauthorized - login again'); }
+  const items = await res.json();
+  $('list').innerHTML = items.map(p => `
+    <tr>
+      <td>${p.id}</td><td>${esc(p.name)}</td><td>${p.price}</td><td>${esc(p.description || '')}</td>
+      <td><button onclick="editProduct(${p.id})">Edit</button>
+          <button onclick="removeProduct(${p.id})">Delete</button></td>
+    </tr>`).join('');
+}
+
+function esc(s) {
+  const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+}
+
+async function addProduct() {
+  const res = await fetch(API, {
+    method: 'POST', headers: authHeaders(),
+    body: JSON.stringify({ name: $('pname').value, price: $('pprice').value, description: $('pdesc').value })
+  });
+  status(res.ok ? 'Product added' : 'Invalid input');
+  loadProducts();
+}
+
+async function editProduct(id) {
+  const name = prompt('New name:'); const price = prompt('New price:');
+  if (!name || !price) return;
+  const res = await fetch(`${API}/${id}`, {
+    method: 'PUT', headers: authHeaders(), body: JSON.stringify({ name, price })
+  });
+  status(res.ok ? 'Updated' : 'Update failed');
+  loadProducts();
+}
+
+async function removeProduct(id) {
+  if (!confirm('Delete this product?')) return;
+  const res = await fetch(`${API}/${id}`, { method: 'DELETE', headers: authHeaders() });
+  status(res.ok ? 'Deleted' : 'Delete failed');
+  loadProducts();
+}
+
+function showCrud() {
+  $('loginBox').hidden = true;
+  $('crudBox').hidden = false;
+  loadProducts();
+}
+
+$('loginBtn').addEventListener('click', login);
+$('addBtn').addEventListener('click', addProduct);
+if (token) showCrud();
+```
+
+
+## `views/auth/forgot.php`
+
+```php
+<h1>Forgot Password</h1>
+<?php if ($msg): ?><p><?= htmlspecialchars($msg) ?></p><?php endif; ?>
+<form method="post" action="/forgot-password">
+    <?= Csrf::field() ?>
+    <input type="email" name="email" placeholder="Your email" required>
+    <button type="submit">Send reset link</button>
+</form>
+```
+
+
+## `views/auth/login.php`
+
+```php
+<h1>Login</h1>
+<?php if (!empty($_GET['registered'])): ?><p>Registered! Please login.</p><?php endif; ?>
+<?php if (!empty($_GET['reset'])): ?><p>Password updated. Please login.</p><?php endif; ?>
+<?php if ($error): ?><p style="color:red"><?= htmlspecialchars($error) ?></p><?php endif; ?>
+<form method="post" action="/login">
+    <?= Csrf::field() ?>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+</form>
+<p><a href="/forgot-password">Forgot password?</a></p>
+```
+
+
+## `views/auth/register.php`
+
+```php
+<h1>Register</h1>
+<?php if ($error): ?><p style="color:red"><?= htmlspecialchars($error) ?></p><?php endif; ?>
+<form method="post" action="/register">
+    <?= Csrf::field() ?>
+    <input name="name" placeholder="Full name" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="password" name="password" placeholder="Password (8+ chars)" required minlength="8">
+    <button type="submit">Register</button>
+</form>
+```
+
+
+## `views/auth/reset.php`
+
+```php
+<h1>Reset Password</h1>
+<?php if (!$valid): ?>
+    <p style="color:red">This reset link is invalid or has expired.</p>
+<?php else: ?>
+    <?php if ($error): ?><p style="color:red"><?= htmlspecialchars($error) ?></p><?php endif; ?>
+    <form method="post" action="/reset-password/<?= htmlspecialchars($token) ?>">
+        <?= Csrf::field() ?>
+        <input type="password" name="password" placeholder="New password (8+ chars)" required minlength="8">
+        <button type="submit">Update password</button>
+    </form>
+<?php endif; ?>
+```
+
+
+## `views/errors/404.php`
+
+```php
+<!DOCTYPE html><html><head><title>404 Not Found</title><link rel="stylesheet" href="/css/style.css"></head>
+<body><main class="container"><h1>404 - Page Not Found</h1><p>The page you requested does not exist.</p><a href="/">Go home</a></main></body></html>
+```
+
+
+## `views/errors/500.php`
+
+```php
+<!DOCTYPE html><html><head><title>500 Server Error</title><link rel="stylesheet" href="/css/style.css"></head>
+<body><main class="container"><h1>500 - Something went wrong</h1><p>We are working on it. Please try again later.</p><a href="/">Go home</a></main></body></html>
+```
+
+
+## `views/layouts/footer.php`
+
+```php
+</main>
+<footer class="footer"><p>&copy; <?= date('Y') ?> My Project - Web Designing Lab</p></footer>
+</body>
+</html>
+```
+
+
+## `views/layouts/header.php`
+
+```php
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><?= htmlspecialchars($title ?? 'My Project') ?> | My Project</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<?php require __DIR__ . '/nav.php'; ?>
+<main class="container">
+```
+
+
+## `views/layouts/nav.php`
+
+```php
+<nav class="nav">
+    <a href="/">Home</a>
+    <a href="/products">Products</a>
+    <a href="/upload">Upload</a>
+    <?php if (Session::check()): ?>
+        <span>Hi, <?= htmlspecialchars($_SESSION['user_name']) ?></span>
+        <a href="/logout">Logout</a>
+    <?php else: ?>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+    <?php endif; ?>
+</nav>
+```
+
+
+## `views/pages/home.php`
+
+```php
+<h1><?= htmlspecialchars($message) ?></h1>
+<p>This page receives <code>$message</code> from HomeController.</p>
+```
+
+
+## `views/pages/products.php`
+
+```php
+<h1>Products (consumed via fetch API)</h1>
+
+<section id="loginBox">
+    <h3>API Login</h3>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button id="loginBtn">Get Token</button>
+</section>
+
+<section id="crudBox" hidden>
+    <h3>Add Product</h3>
+    <input id="pname" placeholder="Name">
+    <input id="pprice" type="number" step="0.01" placeholder="Price">
+    <input id="pdesc" placeholder="Description">
+    <button id="addBtn">Add</button>
+    <table border="1" cellpadding="6">
+        <thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Description</th><th>Actions</th></tr></thead>
+        <tbody id="list"></tbody>
+    </table>
+</section>
+<p id="status"></p>
+<script src="/js/app.js"></script>
+```
+
+
+## `views/pages/upload.php`
+
+```php
+<h1>Secure File Upload</h1>
+<?php if ($msg): ?><p><strong><?= htmlspecialchars($msg) ?></strong></p><?php endif; ?>
+<form method="post" action="/upload" enctype="multipart/form-data">
+    <?= Csrf::field() ?>
+    <input type="file" name="file" required>
+    <button type="submit">Upload</button>
+</form>
+<p>Allowed: JPG, PNG, PDF - max 2 MB.</p>
+```
