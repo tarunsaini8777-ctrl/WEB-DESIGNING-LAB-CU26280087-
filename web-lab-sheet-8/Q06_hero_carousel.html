@@ -1,0 +1,103 @@
+<!--
+  Q6. Create an interactive hero carousel showcasing client products and
+  services using JavaScript and CSS transitions.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hero Carousel | Rye &amp; Rosemary</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; }
+    .carousel { position: relative; overflow: hidden; height: 70vh; min-height: 360px; background: #3B2A30; }
+
+    /* Slides sit side by side; the track slides with a CSS transition */
+    .track { display: flex; height: 100%; transition: transform .6s ease; }
+    .slide { flex: 0 0 100%; display: flex; align-items: flex-end; padding: 2rem; color: #fff; }
+    .slide:nth-child(1) { background: linear-gradient(135deg, #7A4A12, #B8741A); }
+    .slide:nth-child(2) { background: linear-gradient(135deg, #243A29, #3F5E45); }
+    .slide:nth-child(3) { background: linear-gradient(135deg, #3B2A30, #6B4552); }
+    .slide h2 { margin: 0 0 .5rem; font-size: clamp(1.6rem, 5vw, 3rem); font-family: Georgia, serif; }
+    .slide p { margin: 0 0 1rem; max-width: 40ch; }
+    .slide a { display: inline-block; background: #fff; color: #3B2A30; padding: .6rem 1.2rem; border-radius: 6px; text-decoration: none; font-weight: 600; }
+
+    .arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255,255,255,.9); color: #3B2A30; font-size: 1.5rem; cursor: pointer; }
+    .arrow.prev { left: .75rem; } .arrow.next { right: .75rem; }
+    .dots { position: absolute; bottom: .75rem; left: 50%; transform: translateX(-50%); display: flex; gap: .5rem; }
+    .dots button { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; background: transparent; cursor: pointer; padding: 0; }
+    .dots button[aria-current="true"] { background: #fff; }
+    .pause { position: absolute; top: .75rem; right: .75rem; background: rgba(0,0,0,.55); color: #fff; border: 0; padding: .4rem .8rem; border-radius: 6px; cursor: pointer; }
+    button:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) { .track { transition: none; } }
+  </style>
+</head>
+<body>
+  <section class="carousel" aria-roledescription="carousel" aria-label="Featured bakes and services">
+    <div class="track" id="track" aria-live="off">
+      <div class="slide" role="group" aria-roledescription="slide" aria-label="1 of 3">
+        <div><h2>48-hour sourdough</h2><p>Crisp crust, soft crumb, baked at dawn.</p><a href="#">See the menu</a></div>
+      </div>
+      <div class="slide" role="group" aria-roledescription="slide" aria-label="2 of 3">
+        <div><h2>Rosemary focaccia</h2><p>Olive oil, sea salt and garden rosemary.</p><a href="#">Pre-order</a></div>
+      </div>
+      <div class="slide" role="group" aria-roledescription="slide" aria-label="3 of 3">
+        <div><h2>Custom celebration cakes</h2><p>Tell us the occasion. We bake the rest.</p><a href="#">Book a consultation</a></div>
+      </div>
+    </div>
+
+    <button class="arrow prev" id="prev" aria-label="Previous slide">&#8249;</button>
+    <button class="arrow next" id="next" aria-label="Next slide">&#8250;</button>
+    <div class="dots" id="dots"></div>
+    <button class="pause" id="pause" aria-label="Pause automatic slide show">Pause</button>
+  </section>
+
+  <script>
+    const track = document.getElementById('track');
+    const slides = track.children;
+    const dotsBox = document.getElementById('dots');
+    const pauseBtn = document.getElementById('pause');
+    let index = 0, timer = null, playing = true;
+
+    // Build one dot button per slide
+    for (let i = 0; i < slides.length; i++) {
+      const b = document.createElement('button');
+      b.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      b.addEventListener('click', () => { goTo(i); restart(); });
+      dotsBox.appendChild(b);
+    }
+
+    function goTo(i) {
+      index = (i + slides.length) % slides.length;             // wrap around
+      track.style.transform = 'translateX(-' + index * 100 + '%)';
+      [...dotsBox.children].forEach((d, n) => d.setAttribute('aria-current', n === index));
+    }
+    function start()   { timer = setInterval(() => goTo(index + 1), 5000); }
+    function stop()    { clearInterval(timer); }
+    function restart() { if (playing) { stop(); start(); } }
+
+    document.getElementById('next').addEventListener('click', () => { goTo(index + 1); restart(); });
+    document.getElementById('prev').addEventListener('click', () => { goTo(index - 1); restart(); });
+
+    pauseBtn.addEventListener('click', () => {
+      playing = !playing;
+      playing ? start() : stop();
+      pauseBtn.textContent = playing ? 'Pause' : 'Play';
+      pauseBtn.setAttribute('aria-label', playing ? 'Pause automatic slide show' : 'Play automatic slide show');
+    });
+
+    // Keyboard support
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') { goTo(index + 1); restart(); }
+      if (e.key === 'ArrowLeft')  { goTo(index - 1); restart(); }
+    });
+
+    // Do not autoplay for users who prefer reduced motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      playing = false; pauseBtn.textContent = 'Play';
+    }
+    goTo(0);
+    if (playing) start();
+  </script>
+</body>
+</html>

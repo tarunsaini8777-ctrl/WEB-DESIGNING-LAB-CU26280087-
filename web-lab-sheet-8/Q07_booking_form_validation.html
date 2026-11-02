@@ -1,0 +1,122 @@
+<!--
+  Q7. Design and integrate an interactive booking or reservation form with
+  client-side JavaScript validation.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Book a Table | Rye &amp; Rosemary</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #F7F5F0; color: #2A2024; margin: 0; padding: 1rem; }
+    form { max-width: 480px; margin: 2rem auto; background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+    h1 { font-family: Georgia, serif; margin-top: 0; }
+    .field { margin-bottom: 1rem; }
+    label { display: block; font-weight: 600; margin-bottom: .25rem; }
+    input, select, textarea { width: 100%; padding: .6rem; font-size: 1rem; border: 1px solid #777; border-radius: 6px; box-sizing: border-box; }
+    input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #B00020; }
+    .error { color: #B00020; font-size: .875rem; min-height: 1.2em; margin: .25rem 0 0; }
+    button { background: #3F5E45; color: #fff; border: 0; padding: .75rem 1.5rem; font-size: 1rem; border-radius: 6px; cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #B8741A; outline-offset: 2px; }
+    .success { background: #E3F1E5; border: 1px solid #3F5E45; padding: 1rem; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <form id="booking" novalidate>
+    <h1>Book a table</h1>
+
+    <div class="field">
+      <label for="name">Full name</label>
+      <input id="name" name="name" type="text" autocomplete="name" aria-describedby="name-err">
+      <p class="error" id="name-err" aria-live="polite"></p>
+    </div>
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email" aria-describedby="email-err">
+      <p class="error" id="email-err" aria-live="polite"></p>
+    </div>
+
+    <div class="field">
+      <label for="phone">Phone (10 digits)</label>
+      <input id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" aria-describedby="phone-err">
+      <p class="error" id="phone-err" aria-live="polite"></p>
+    </div>
+
+    <div class="field">
+      <label for="date">Date</label>
+      <input id="date" name="date" type="date" aria-describedby="date-err">
+      <p class="error" id="date-err" aria-live="polite"></p>
+    </div>
+
+    <div class="field">
+      <label for="time">Time</label>
+      <select id="time" name="time" aria-describedby="time-err">
+        <option value="">Choose a time</option>
+        <option>08:00</option><option>10:00</option><option>12:00</option>
+        <option>14:00</option><option>16:00</option><option>18:00</option>
+      </select>
+      <p class="error" id="time-err" aria-live="polite"></p>
+    </div>
+
+    <div class="field">
+      <label for="guests">Number of guests (1–12)</label>
+      <input id="guests" name="guests" type="number" min="1" max="12" aria-describedby="guests-err">
+      <p class="error" id="guests-err" aria-live="polite"></p>
+    </div>
+
+    <button type="submit">Confirm booking</button>
+    <div id="result" role="status" aria-live="polite"></div>
+  </form>
+
+  <script>
+    const form = document.getElementById('booking');
+
+    // Earliest selectable date = today
+    const dateInput = document.getElementById('date');
+    dateInput.min = new Date().toISOString().split('T')[0];
+
+    // One validator per field. Returns an error message or '' if valid.
+    const rules = {
+      name:   v => v.trim().length < 2 ? 'Enter your full name (at least 2 characters).' : '',
+      email:  v => !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? 'Enter a valid email, like name@example.com.' : '',
+      phone:  v => !/^[6-9]\d{9}$/.test(v) ? 'Enter a 10-digit mobile number starting with 6-9.' : '',
+      date:   v => !v ? 'Choose a date.' : (v < dateInput.min ? 'Date cannot be in the past.' : ''),
+      time:   v => !v ? 'Choose a time.' : '',
+      guests: v => (!v || v < 1 || v > 12) ? 'Enter a number of guests from 1 to 12.' : ''
+    };
+
+    function check(field) {
+      const input = form.elements[field];
+      const msg = rules[field](input.value);
+      document.getElementById(field + '-err').textContent = msg;
+      input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+      return !msg;
+    }
+
+    // Validate each field when the user leaves it, and re-check while fixing errors
+    Object.keys(rules).forEach(f => {
+      const el = form.elements[f];
+      el.addEventListener('blur', () => check(f));
+      el.addEventListener('input', () => { if (el.getAttribute('aria-invalid') === 'true') check(f); });
+    });
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const results = Object.keys(rules).map(check);
+      const firstBad = Object.keys(rules).find(f => form.elements[f].getAttribute('aria-invalid') === 'true');
+      const result = document.getElementById('result');
+      if (firstBad) {
+        form.elements[firstBad].focus();                 // move focus to first error
+        result.innerHTML = '';
+        return;
+      }
+      const d = new FormData(form);
+      result.innerHTML = '<p class="success">Thank you, ' + d.get('name').replace(/[<>&]/g, '') +
+        '! Table for ' + d.get('guests') + ' on ' + d.get('date') + ' at ' + d.get('time') + ' is requested.</p>';
+      form.reset();
+    });
+  </script>
+</body>
+</html>

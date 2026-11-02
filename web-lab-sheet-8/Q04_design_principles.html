@@ -1,0 +1,75 @@
+<!--
+  Q4. Incorporate modern web design principles including consistent color
+  palettes, typography scales, and white space management.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design System | Rye &amp; Rosemary</title>
+  <style>
+    :root {
+      /* ----- COLOR PALETTE (named tokens) ----- */
+      --rye:      #3B2A30;  /* deep rye brown - headings, header */
+      --flour:    #F7F5F0;  /* page background */
+      --rosemary: #3F5E45;  /* primary action colour */
+      --crust:    #B8741A;  /* accent - decorative only */
+      --blush:    #EBD9D2;  /* soft surface */
+      --ink:      #2A2024;  /* body text */
+
+      /* ----- TYPE SCALE (ratio 1.25, base 1rem) ----- */
+      --step--1: .8rem;
+      --step-0:  1rem;
+      --step-1:  1.25rem;
+      --step-2:  1.563rem;
+      --step-3:  1.953rem;
+      --step-4:  2.441rem;
+
+      /* ----- SPACING SCALE (8px rhythm) ----- */
+      --space-1: .5rem;
+      --space-2: 1rem;
+      --space-3: 1.5rem;
+      --space-4: 2rem;
+      --space-6: 3rem;
+      --space-8: 4rem;
+
+      --font-display: Georgia, "Times New Roman", serif;
+      --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    body { margin: 0; background: var(--flour); color: var(--ink); font: var(--step-0)/1.7 var(--font-body); }
+    h1, h2, h3 { font-family: var(--font-display); color: var(--rye); line-height: 1.2; margin: 0 0 var(--space-2); }
+    h1 { font-size: var(--step-4); }
+    h2 { font-size: var(--step-3); }
+    h3 { font-size: var(--step-1); }
+    p  { max-width: 65ch; margin: 0 0 var(--space-2); }     /* readable line length */
+    section { padding: var(--space-8) var(--space-3); max-width: 960px; margin: 0 auto; }  /* generous white space */
+    .swatches { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .swatch { width: 120px; padding: var(--space-2); border-radius: 6px; font-size: var(--step--1); }
+    .btn { display: inline-block; padding: var(--space-1) var(--space-3); background: var(--rosemary); color: #fff; border-radius: 6px; text-decoration: none; }
+    .btn:hover, .btn:focus-visible { background: var(--rye); }
+  </style>
+</head>
+<body>
+  <section>
+    <h1>Bread with patience</h1>
+    <p>This page demonstrates the colour palette, the 1.25 modular type scale and the 8px spacing rhythm used across the site.</p>
+    <a class="btn" href="#">Book a table</a>
+  </section>
+  <section>
+    <h2>Colour palette</h2>
+    <div class="swatches">
+      <div class="swatch" style="background:var(--rye);color:#fff">Rye<br>#3B2A30</div>
+      <div class="swatch" style="background:var(--rosemary);color:#fff">Rosemary<br>#3F5E45</div>
+      <div class="swatch" style="background:var(--crust);color:#fff">Crust<br>#B8741A</div>
+      <div class="swatch" style="background:var(--blush)">Blush<br>#EBD9D2</div>
+      <div class="swatch" style="background:var(--flour);border:1px solid #ccc">Flour<br>#F7F5F0</div>
+    </div>
+  </section>
+  <section>
+    <h2>Type scale</h2>
+    <h1>Heading 1 – 2.441rem</h1><h2>Heading 2 – 1.953rem</h2><h3>Heading 3 – 1.25rem</h3>
+    <p>Body text – 1rem, line-height 1.7, maximum 65 characters per line.</p>
+  </section>
+</body>
+</html>

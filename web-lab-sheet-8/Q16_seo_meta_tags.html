@@ -1,0 +1,80 @@
+<!--
+  Q16. Implement SEO meta tags (title, description, Open Graph tags) across
+  all pages of the client website.
+  Copy the <head> block into every page and change title, description,
+  canonical and og: values per page.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Title: unique per page, under 60 characters -->
+  <title>Rye &amp; Rosemary Bakehouse | Artisan Sourdough in Dehradun</title>
+
+  <!-- Description: unique per page, 150-160 characters -->
+  <meta name="description" content="Small-batch sourdough, rye loaves, pastries and custom cakes baked fresh daily in Dehradun. Book a table or pre-order online.">
+  <meta name="keywords" content="bakery Dehradun, sourdough, artisan bread, custom cakes">
+  <meta name="author" content="Rye &amp; Rosemary Bakehouse">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.ryeandrosemary.example/">
+  <meta name="theme-color" content="#3B2A30">
+
+  <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Rye &amp; Rosemary Bakehouse">
+  <meta property="og:title" content="Rye &amp; Rosemary Bakehouse | Artisan Sourdough">
+  <meta property="og:description" content="Fresh sourdough, rye and pastries baked daily. Book a table online.">
+  <meta property="og:url" content="https://www.ryeandrosemary.example/">
+  <meta property="og:image" content="https://www.ryeandrosemary.example/img/og-image.jpg">
+  <meta property="og:image:alt" content="Golden sourdough loaves on a wooden counter">
+  <meta property="og:locale" content="en_IN">
+
+  <!-- Twitter / X card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Rye &amp; Rosemary Bakehouse">
+  <meta name="twitter:description" content="Fresh sourdough, rye and pastries baked daily.">
+  <meta name="twitter:image" content="https://www.ryeandrosemary.example/img/og-image.jpg">
+
+  <link rel="icon" href="/favicon.ico">
+
+  <!-- Structured data: lets Google show rich results -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Bakery",
+    "name": "Rye & Rosemary Bakehouse",
+    "image": "https://www.ryeandrosemary.example/img/og-image.jpg",
+    "telephone": "+91-135-000-0000",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "12 Baker Lane, Rajpur Road",
+      "addressLocality": "Dehradun",
+      "addressRegion": "Uttarakhand",
+      "postalCode": "248001",
+      "addressCountry": "IN"
+    },
+    "openingHours": "Tu-Su 07:00-20:00",
+    "priceRange": "₹₹"
+  }
+  </script>
+</head>
+<body>
+  <h1>Rye &amp; Rosemary Bakehouse</h1>
+  <p>View page source to see the SEO tags in the head section.</p>
+
+  <!--
+  Per-page title and description examples
+  ┌──────────┬───────────────────────────────────────────┬──────────────────────────────────────────────┐
+  │ Page     │ Title                                     │ Description                                  │
+  ├──────────┼───────────────────────────────────────────┼──────────────────────────────────────────────┤
+  │ Home     │ Rye & Rosemary Bakehouse | Artisan Bread  │ Small-batch sourdough baked daily...         │
+  │ Menu     │ Menu | Rye & Rosemary Bakehouse           │ Browse breads, pastries and custom cakes...  │
+  │ About    │ Our Story | Rye & Rosemary Bakehouse      │ Meet the bakers behind the bread...          │
+  │ Booking  │ Book a Table | Rye & Rosemary Bakehouse   │ Reserve a table or pre-order online...       │
+  │ Contact  │ Contact & Map | Rye & Rosemary Bakehouse  │ Find us on Rajpur Road, Dehradun...          │
+  └──────────┴───────────────────────────────────────────┴──────────────────────────────────────────────┘
+  -->
+</body>
+</html>

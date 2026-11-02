@@ -1,0 +1,59 @@
+<!--
+  Q8. Implement Google Maps embedding and responsive styling on the
+  client's contact page.
+  Note: to use your own location, open Google Maps > Share > Embed a map >
+  copy the iframe src and paste it below. The src used here needs no API key.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact | Rye &amp; Rosemary</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; color: #2A2024; line-height: 1.6; }
+    .contact { display: grid; gap: 1.5rem; padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
+    h1 { font-family: Georgia, serif; margin: 0 0 1rem; }
+    address { font-style: normal; }
+    a { color: #3F5E45; }
+
+    /* Responsive map: keeps a 4:3 ratio on phones, 16:10 on desktop */
+    .map-wrap { position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: 8px; overflow: hidden; background: #EBD9D2; }
+    .map-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+    @media (min-width: 768px) {
+      .contact { grid-template-columns: 1fr 2fr; align-items: start; }
+      .map-wrap { aspect-ratio: 16 / 10; }
+    }
+  </style>
+</head>
+<body>
+  <main class="contact">
+    <section aria-labelledby="visit">
+      <h1 id="visit">Visit us</h1>
+      <address>
+        <strong>Rye &amp; Rosemary Bakehouse</strong><br>
+        12 Baker Lane, Rajpur Road<br>
+        Dehradun, Uttarakhand 248001<br><br>
+        <a href="tel:+911350000000">+91 135 000 0000</a><br>
+        <a href="mailto:hello@ryeandrosemary.example">hello@ryeandrosemary.example</a>
+      </address>
+      <h2>Opening hours</h2>
+      <p>Tuesday–Sunday: 7 am – 8 pm<br>Monday: closed</p>
+      <p><a href="https://www.google.com/maps/search/?api=1&amp;query=Rajpur+Road+Dehradun" target="_blank" rel="noopener">Open in Google Maps (new tab)</a></p>
+    </section>
+
+    <section aria-label="Map showing the bakery location">
+      <div class="map-wrap">
+        <iframe
+          title="Google Map showing Rye and Rosemary Bakehouse, Rajpur Road, Dehradun"
+          src="https://www.google.com/maps?q=Rajpur+Road+Dehradun&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen></iframe>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

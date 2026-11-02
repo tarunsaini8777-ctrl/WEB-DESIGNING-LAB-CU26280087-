@@ -1,0 +1,65 @@
+<!--
+  Q3. Develop a fully responsive CSS layout using CSS Grid and Flexbox
+  adhering to mobile-first design principles.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Responsive Layout | Rye &amp; Rosemary</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.6; color: #2A2024; }
+    img { max-width: 100%; height: auto; display: block; }
+
+    /* ---------- MOBILE FIRST (base styles, ~320px+) ---------- */
+    .site-header { display: flex; flex-direction: column; gap: .5rem; padding: 1rem; background: #3B2A30; color: #fff; }
+    .site-header ul { display: flex; flex-wrap: wrap; gap: 1rem; list-style: none; margin: 0; padding: 0; }
+    .site-header a { color: #fff; }
+
+    .layout { display: grid; gap: 1.5rem; padding: 1rem; grid-template-columns: 1fr; }
+    .cards { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+    .card { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: #fff; }
+    .card h3, .card p { margin: .75rem 1rem; }
+    aside { background: #EBD9D2; padding: 1rem; border-radius: 8px; }
+    footer { padding: 1rem; background: #3F5E45; color: #fff; text-align: center; }
+
+    /* ---------- TABLET (>= 600px) ---------- */
+    @media (min-width: 600px) {
+      .site-header { flex-direction: row; justify-content: space-between; align-items: center; }
+      .cards { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* ---------- DESKTOP (>= 992px) ---------- */
+    @media (min-width: 992px) {
+      .layout { grid-template-columns: 3fr 1fr; max-width: 1200px; margin: 0 auto; padding: 2rem; }
+      .cards { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <strong>Rye &amp; Rosemary</strong>
+    <nav aria-label="Primary">
+      <ul><li><a href="#">Menu</a></li><li><a href="#">About</a></li><li><a href="#">Booking</a></li><li><a href="#">Contact</a></li></ul>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <main>
+      <h1>Today's bakes</h1>
+      <div class="cards">
+        <article class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23B8741A' width='400' height='300'/%3E%3Ccircle cx='200' cy='150' r='80' fill='%23E9C98F'/%3E%3C/svg%3E" alt="Sourdough loaf" width="400" height="300"><h3>Sourdough</h3><p>₹180</p></article>
+        <article class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%233F5E45' width='400' height='300'/%3E%3Crect x='100' y='100' width='200' height='100' rx='50' fill='%23A9C4A5'/%3E%3C/svg%3E" alt="Focaccia" width="400" height="300"><h3>Focaccia</h3><p>₹140</p></article>
+        <article class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%233B2A30' width='400' height='300'/%3E%3Ccircle cx='200' cy='150' r='60' fill='%23EBD9D2'/%3E%3C/svg%3E" alt="Rye loaf" width="400" height="300"><h3>Dark Rye</h3><p>₹160</p></article>
+        <article class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23B8741A' width='400' height='300'/%3E%3Ccircle cx='200' cy='150' r='80' fill='%23E9C98F'/%3E%3C/svg%3E" alt="Croissants" width="400" height="300"><h3>Croissant</h3><p>₹90</p></article>
+        <article class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%233F5E45' width='400' height='300'/%3E%3Crect x='100' y='100' width='200' height='100' rx='50' fill='%23A9C4A5'/%3E%3C/svg%3E" alt="Olive bread" width="400" height="300"><h3>Olive Loaf</h3><p>₹170</p></article>
+        <article class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%233B2A30' width='400' height='300'/%3E%3Ccircle cx='200' cy='150' r='60' fill='%23EBD9D2'/%3E%3C/svg%3E" alt="Cinnamon roll" width="400" height="300"><h3>Cinnamon Roll</h3><p>₹110</p></article>
+      </div>
+    </main>
+    <aside><h2>Hours</h2><p>Tue–Sun, 7 am – 8 pm</p></aside>
+  </div>
+  <footer>&copy; 2026 Rye &amp; Rosemary Bakehouse</footer>
+</body>
+</html>

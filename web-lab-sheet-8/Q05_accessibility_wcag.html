@@ -1,0 +1,82 @@
+<!--
+  Q5. Implement web accessibility standards (WCAG) including ARIA landmarks,
+  alt text for all images, and sufficient color contrast ratios.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accessible Page | Rye &amp; Rosemary</title>
+  <style>
+    /* Contrast ratios (WCAG AA needs 4.5:1 for normal text)
+       #2A2024 on #FFFFFF  = 16.2:1
+       #FFFFFF on #3F5E45  =  7.0:1
+       #FFFFFF on #3B2A30  = 13.8:1  */
+    body { font-family: system-ui, sans-serif; line-height: 1.6; color: #2A2024; background: #fff; margin: 0; }
+    header, main, footer { padding: 1rem; }
+    header { background: #3B2A30; color: #fff; }
+    header a { color: #fff; }
+    footer { background: #3F5E45; color: #fff; }
+    footer a { color: #fff; }
+
+    /* Skip link: hidden until focused by keyboard */
+    .skip-link { position: absolute; left: -999px; background: #fff; color: #000; padding: .5rem 1rem; }
+    .skip-link:focus { left: 1rem; top: 1rem; z-index: 10; }
+
+    /* Strong visible focus indicator */
+    a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 3px solid #B8741A; outline-offset: 2px;
+    }
+    .btn { background: #3F5E45; color: #fff; border: 0; padding: .75rem 1.25rem; font-size: 1rem; border-radius: 6px; min-height: 44px; }
+
+    /* Respect users who prefer less motion */
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+    img { max-width: 100%; height: auto; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header role="banner">
+    <strong>Rye &amp; Rosemary</strong>
+    <nav aria-label="Primary navigation">
+      <a href="#main">Menu</a> | <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <main id="main" role="main" tabindex="-1">
+    <h1>Accessible bakery website</h1>
+
+    <!-- Informative image: descriptive alt text -->
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23B8741A' width='400' height='300'/%3E%3Ccircle cx='200' cy='150' r='80' fill='%23E9C98F'/%3E%3C/svg%3E" width="400" height="300" alt="Freshly baked sourdough loaf with a golden, scored crust">
+
+    <!-- Decorative image: empty alt so screen readers skip it -->
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%233F5E45' width='400' height='300'/%3E%3Crect x='100' y='100' width='200' height='100' rx='50' fill='%23A9C4A5'/%3E%3C/svg%3E" width="100" height="75" alt="" role="presentation">
+
+    <!-- Search landmark -->
+    <form role="search" aria-label="Search menu">
+      <label for="q">Search the menu</label>
+      <input id="q" type="search" name="q">
+      <button class="btn" type="submit">Search</button>
+    </form>
+
+    <!-- Live region announces dynamic updates -->
+    <button class="btn" id="add" type="button">Add sourdough to order</button>
+    <p id="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <footer id="contact" role="contentinfo">
+    <p>Call us: <a href="tel:+911350000000">+91 135 000 0000</a></p>
+  </footer>
+
+  <script>
+    // Announce changes to screen-reader users
+    let count = 0;
+    document.getElementById('add').addEventListener('click', () => {
+      count++;
+      document.getElementById('status').textContent = count + ' sourdough loaf added to your order.';
+    });
+  </script>
+</body>
+</html>

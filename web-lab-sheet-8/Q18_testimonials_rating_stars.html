@@ -1,0 +1,124 @@
+<!--
+  Q18. Incorporate customer testimonial grids with interactive rating stars.
+  - Each testimonial shows a read-only star rating.
+  - "Rate us" form lets visitors click stars (mouse or keyboard) and adds a
+    new testimonial to the grid.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Testimonials | Rye &amp; Rosemary</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: #F7F5F0; color: #2A2024; padding: 1.5rem; }
+    h1, h2 { font-family: Georgia, serif; color: #3B2A30; }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+
+    /* Mobile first: 1 column, 2 on tablet, 3 on desktop */
+    .grid { display: grid; gap: 1rem; grid-template-columns: 1fr; padding: 0; list-style: none; }
+    @media (min-width: 640px)  { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 992px)  { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+    .card { background: #fff; padding: 1.25rem; border-radius: 8px; border-top: 4px solid #B8741A; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+    .card blockquote { margin: .5rem 0; }
+    .card cite { font-weight: 600; font-style: normal; }
+
+    /* Display stars */
+    .stars { color: #B8741A; font-size: 1.25rem; letter-spacing: 2px; }
+    .stars .off { color: #cfc6bd; }
+
+    /* Interactive star input (radio buttons styled as stars) */
+    .rating { border: 0; padding: 0; margin: 0 0 1rem; }
+    .rating legend { font-weight: 600; margin-bottom: .25rem; }
+    .star-input { display: inline-flex; flex-direction: row-reverse; }
+    .star-input input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    .star-input label { font-size: 2rem; color: #cfc6bd; cursor: pointer; padding: 0 .1rem; line-height: 1; }
+    /* Because order is reversed, "~" selects stars to the left visually */
+    .star-input label:hover, .star-input label:hover ~ label,
+    .star-input input:checked ~ label { color: #B8741A; }
+    .star-input input:focus-visible + label { outline: 3px solid #3F5E45; outline-offset: 2px; }
+
+    form.add { background: #fff; padding: 1.25rem; border-radius: 8px; max-width: 480px; margin-top: 2rem; }
+    form.add label.t { display: block; font-weight: 600; margin: .5rem 0 .25rem; }
+    form.add input[type=text], form.add textarea { width: 100%; padding: .6rem; border: 1px solid #777; border-radius: 6px; font: inherit; }
+    form.add button { margin-top: 1rem; background: #3F5E45; color: #fff; border: 0; padding: .7rem 1.4rem; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+    #msg { color: #B00020; min-height: 1.2em; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>What our customers say</h1>
+    <p>Average rating: <strong id="avg"></strong></p>
+    <ul class="grid" id="grid"></ul>
+
+    <form class="add" id="add" novalidate>
+      <h2>Rate your visit</h2>
+      <label class="t" for="who">Your name</label>
+      <input id="who" type="text" autocomplete="name">
+      <label class="t" for="text">Your review</label>
+      <textarea id="text" rows="3"></textarea>
+
+      <fieldset class="rating">
+        <legend>Your rating</legend>
+        <div class="star-input">
+          <input type="radio" name="rate" id="r5" value="5"><label for="r5" title="5 stars"><span aria-hidden="true">★</span><span class="sr" hidden>5 stars</span></label>
+          <input type="radio" name="rate" id="r4" value="4"><label for="r4" title="4 stars"><span aria-hidden="true">★</span></label>
+          <input type="radio" name="rate" id="r3" value="3"><label for="r3" title="3 stars"><span aria-hidden="true">★</span></label>
+          <input type="radio" name="rate" id="r2" value="2"><label for="r2" title="2 stars"><span aria-hidden="true">★</span></label>
+          <input type="radio" name="rate" id="r1" value="1"><label for="r1" title="1 star"><span aria-hidden="true">★</span></label>
+        </div>
+      </fieldset>
+      <p id="msg" role="alert"></p>
+      <button type="submit">Add review</button>
+    </form>
+  </div>
+
+  <script>
+    const reviews = [
+      { name: 'Anita S.',  rating: 5, text: 'The best sourdough in the city. I go every Saturday.' },
+      { name: 'Rohit K.',  rating: 5, text: 'Our birthday cake was perfect and arrived on time.' },
+      { name: 'Priya M.',  rating: 4, text: 'Lovely focaccia. Gets busy by noon, so come early.' }
+    ];
+
+    const grid = document.getElementById('grid');
+
+    // Build a "★★★★☆" string with an accessible text alternative
+    function starsHTML(n) {
+      let s = '<span class="stars" role="img" aria-label="' + n + ' out of 5 stars">';
+      for (let i = 1; i <= 5; i++) s += i <= n ? '★' : '<span class="off">★</span>';
+      return s + '</span>';
+    }
+
+    function render() {
+      grid.innerHTML = '';
+      reviews.forEach(r => {
+        const li = document.createElement('li');
+        li.className = 'card';
+        li.innerHTML = starsHTML(r.rating) + '<blockquote><p></p></blockquote><cite></cite>';
+        li.querySelector('p').textContent = r.text;        // textContent = safe from HTML injection
+        li.querySelector('cite').textContent = '— ' + r.name;
+        grid.appendChild(li);
+      });
+      const avg = reviews.reduce((a, r) => a + r.rating, 0) / reviews.length;
+      document.getElementById('avg').textContent = avg.toFixed(1) + ' / 5 (' + reviews.length + ' reviews)';
+    }
+
+    document.getElementById('add').addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById('who').value.trim();
+      const text = document.getElementById('text').value.trim();
+      const checked = document.querySelector('input[name=rate]:checked');
+      const msg = document.getElementById('msg');
+      if (!name || !text || !checked) { msg.textContent = 'Please enter your name, a review and choose a star rating.'; return; }
+      msg.textContent = '';
+      reviews.unshift({ name, text, rating: Number(checked.value) });
+      render();
+      e.target.reset();
+    });
+
+    render();
+  </script>
+</body>
+</html>
