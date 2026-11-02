@@ -1,0 +1,23 @@
+# Lab Sheet 5 - Question 10: Configure Apache .htaccess files and handler directives to execute Python scripts seamlessly within web directories.
+
+# Place this .htaccess inside the web directory containing .py scripts
+# e.g. C:/xampp/htdocs/pyapp/.htaccess
+
+Options +ExecCGI
+AddHandler cgi-script .py
+DirectoryIndex index.py index.html
+
+# Optional: show clean URLs without extension (needs mod_rewrite)
+# RewriteEngine On
+# RewriteCond %{REQUEST_FILENAME}.py -f
+# RewriteRule ^(.*)$ $1.py [L]
+
+# ---- Requirements ----
+# 1. httpd.conf: the directory must allow overrides:
+#      <Directory "C:/xampp/htdocs/pyapp">
+#          AllowOverride All
+#      </Directory>
+# 2. mod_cgi (and mod_rewrite) enabled; restart Apache.
+# 3. Scripts need the shebang line (#!C:/Python311/python.exe or #!/usr/bin/env python3),
+#    print("Content-Type: text/html\n") first, and chmod +x on Linux.
+# 4. Test: create test.py in the folder and open http://localhost/pyapp/test.py
