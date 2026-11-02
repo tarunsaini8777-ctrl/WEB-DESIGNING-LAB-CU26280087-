@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 2
+     Q19. Implement CSS typography rules (font-family, line-height, letter-spacing, text-
+     transform) across all labels and placeholders in a registration form.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q19 - Typography in a Registration Form</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; background: #fdf6ec; }
+    form { max-width: 520px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    h1 { font-family: Georgia, "Times New Roman", serif; letter-spacing: 1px; margin-top: 0; }
+
+    /* LABELS */
+    label {
+      display: block; margin: 16px 0 6px;
+      font-family: "Trebuchet MS", Verdana, sans-serif;
+      font-size: .8rem; font-weight: 700;
+      line-height: 1.5;
+      letter-spacing: 1.5px;          /* spacing between letters */
+      text-transform: uppercase;      /* ABC */
+      color: #7c2d12;
+    }
+    /* INPUTS + PLACEHOLDERS */
+    input, select {
+      width: 100%; padding: 11px 12px; border: 1px solid #d6c7b3; border-radius: 8px;
+      font-family: "Courier New", monospace; font-size: 1rem; line-height: 1.6;
+    }
+    ::placeholder {
+      font-family: "Georgia", serif;
+      font-style: italic;
+      letter-spacing: .5px;
+      text-transform: capitalize;     /* First Letter Of Each Word */
+      line-height: 1.6;
+      color: #a8a29e;
+    }
+    button { margin-top: 22px; padding: 12px 28px; background: #7c2d12; color: #fff; border: 0; border-radius: 8px;
+             font-family: "Trebuchet MS", sans-serif; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <form action="#" method="post">
+    <h1>Registration</h1>
+    <label for="fn">Full name</label><input type="text" id="fn" placeholder="enter your full name">
+    <label for="em">Email address</label><input type="email" id="em" placeholder="your email address">
+    <label for="ph">Mobile number</label><input type="tel" id="ph" placeholder="ten digit mobile number">
+    <label for="pw">Password</label><input type="password" id="pw" placeholder="choose a strong password">
+    <button type="submit">Create account</button>
+  </form>
+  
+</body>
+</html>

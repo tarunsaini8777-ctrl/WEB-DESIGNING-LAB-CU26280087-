@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 2
+     Q2. Design a student registration form incorporating HTML5 validation attributes
+     (required, minlength, maxlength, pattern, type='email').
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q2 - Student Registration (HTML5 validation)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #f1f4f9; color: #1f2937; padding: 24px; }
+    h1 { margin-top: 0; font-size: 1.5rem; }
+
+    form { max-width: 520px; margin: 0 auto; background: #fff; padding: 26px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    label { display: block; font-weight: 600; margin: 14px 0 6px; }
+    input, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; }
+    input:valid:not(:placeholder-shown) { border-color: #16a34a; }
+    input:invalid:not(:placeholder-shown) { border-color: #dc2626; }
+    small { color: #6b7280; }
+    button { margin-top: 20px; background: #1d4ed8; color: #fff; border: 0; padding: 11px 22px; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <form action="#" method="post">
+    <h1>Student Registration</h1>
+
+    <label for="name">Full name *</label>
+    <input type="text" id="name" name="name" required minlength="3" maxlength="40" placeholder="At least 3 characters">
+
+    <label for="roll">Roll number * <small>(format: 2 letters + 6 digits, e.g. MC123456)</small></label>
+    <input type="text" id="roll" name="roll" required pattern="[A-Za-z]{2}[0-9]{6}" title="Two letters followed by six digits, e.g. MC123456" placeholder="MC123456">
+
+    <label for="email">Email *</label>
+    <input type="email" id="email" name="email" required placeholder="name@example.com">
+
+    <label for="phone">Mobile number * <small>(10 digits)</small></label>
+    <input type="tel" id="phone" name="phone" required pattern="[6-9][0-9]{9}" maxlength="10" title="10-digit Indian mobile number starting with 6-9" placeholder="9876543210">
+
+    <label for="pwd">Password * <small>(8-16 characters)</small></label>
+    <input type="password" id="pwd" name="pwd" required minlength="8" maxlength="16" placeholder="8 to 16 characters">
+
+    <label for="dob">Date of birth *</label>
+    <input type="date" id="dob" name="dob" required>
+
+    <label for="branch">Branch *</label>
+    <select id="branch" name="branch" required>
+      <option value="">-- Select --</option>
+      <option>MCA</option><option>BCA</option><option>B.Tech</option>
+    </select>
+
+    <button type="submit">Register</button>
+  </form>
+  
+</body>
+</html>
