@@ -1,9 +1,0 @@
-; Remove the leading semicolon to enable (XAMPP/Windows):
-extension=mysqli
-extension=pdo_mysql
-extension=mbstring
-extension=curl
-extension=openssl
-extension=fileinfo
-; Ubuntu: sudo apt install php-mysql php-mbstring php-curl && sudo phpenmod mbstring
-; Restart Apache, then open check_extensions.php.
