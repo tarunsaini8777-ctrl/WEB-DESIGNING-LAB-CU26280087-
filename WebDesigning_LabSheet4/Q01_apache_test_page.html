@@ -1,0 +1,23 @@
+<!--
+Lab Sheet 4 - Question 1: Configure and verify the Apache web server installation locally, ensuring the default test page (index.php or index.html) loads correctly on http://localhost.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Apache Test Page</title>
+</head>
+<body>
+  <h1>It works! Apache is running.</h1>
+  <p>Place this file in htdocs (XAMPP) or /var/www/html (Linux) and open http://localhost</p>
+</body>
+</html>
+
+<!--
+STEPS
+1. Install XAMPP/WAMP (Windows) or: sudo apt install apache2 (Linux)
+2. Start Apache: XAMPP Control Panel -> Start, or: sudo systemctl start apache2
+3. Save this file as index.html in the document root (C:\xampp\htdocs  or  /var/www/html)
+4. Open http://localhost in the browser -> page above should load.
+5. Check config syntax: httpd -t  (or apachectl configtest)
+-->
