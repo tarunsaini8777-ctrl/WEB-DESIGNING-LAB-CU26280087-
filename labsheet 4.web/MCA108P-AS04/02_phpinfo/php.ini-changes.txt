@@ -1,0 +1,6 @@
+; Edit php.ini (XAMPP: C:\xampp\php\php.ini, Ubuntu: /etc/php/8.x/apache2/php.ini)
+display_errors = On
+display_startup_errors = On
+error_reporting = E_ALL
+log_errors = On
+; Restart Apache afterwards, then open phpinfo.php and search "display_errors".
