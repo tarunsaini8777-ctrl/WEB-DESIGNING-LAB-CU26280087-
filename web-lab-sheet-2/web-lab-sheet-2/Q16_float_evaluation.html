@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 2
+     Q16. Create a structured employee evaluation form using CSS float and clear properties
+     for alignment.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q16 - Employee Evaluation (float and clear)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #f1f4f9; color: #1f2937; padding: 24px; }
+    h1 { margin-top: 0; font-size: 1.5rem; }
+
+    .form-wrap { max-width: 720px; margin: 0 auto; background: #fff; padding: 26px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    .col-left  { float: left;  width: 48%; }          /* two floated columns */
+    .col-right { float: right; width: 48%; }
+    .clear { clear: both; }                           /* stop floating: next block starts below both columns */
+    .clearfix::after { content: ""; display: table; clear: both; }   /* container wraps its floated children */
+    label { display: block; font-weight: 600; margin: 14px 0 6px; }
+    input, select, textarea { width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+    .ratings { margin-top: 18px; padding: 14px; background: #f8fafc; border-radius: 8px; }
+    .ratings .item { float: left; width: 33.33%; padding-right: 10px; }
+    button { margin-top: 20px; padding: 11px 26px; background: #be185d; color: #fff; border: 0; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+    footer { margin-top: 14px; font-size: .85rem; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <div class="form-wrap">
+    <h1>Employee Evaluation</h1>
+    <form action="#" method="post">
+      <div class="clearfix">
+        <div class="col-left">
+          <label for="ename">Employee name</label><input type="text" id="ename">
+          <label for="eid">Employee ID</label><input type="text" id="eid">
+        </div>
+        <div class="col-right">
+          <label for="dept">Department</label>
+          <select id="dept"><option>IT</option><option>HR</option><option>Finance</option></select>
+          <label for="period">Review period</label><input type="text" id="period" placeholder="Jan - Jun 2026">
+        </div>
+      </div>
+
+      <div class="ratings clearfix">
+        <div class="item"><label for="r1">Quality (1-5)</label><input type="number" id="r1" min="1" max="5"></div>
+        <div class="item"><label for="r2">Teamwork (1-5)</label><input type="number" id="r2" min="1" max="5"></div>
+        <div class="item"><label for="r3">Punctuality (1-5)</label><input type="number" id="r3" min="1" max="5"></div>
+      </div>
+
+      <div class="clear"></div>
+      <label for="remarks">Manager remarks</label>
+      <textarea id="remarks" rows="4"></textarea>
+      <button type="submit">Submit Evaluation</button>
+      <footer>Layout made only with float and clear.</footer>
+    </form>
+  </div>
+  
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!--
+  Lab Sheet 2
+     Q7. Build an interactive feedback form where input fields change border color and
+     background tint on :focus pseudo-class.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Q7 - Feedback Form with :focus</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #f1f4f9; color: #1f2937; padding: 24px; }
+    h1 { margin-top: 0; font-size: 1.5rem; }
+
+    form { max-width: 520px; margin: 0 auto; background: #fff; padding: 28px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+    label { display: block; font-weight: 600; margin: 14px 0 6px; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border: 2px solid #d1d5db; border-radius: 8px; font: inherit; background: #fff; transition: border-color .25s, background-color .25s; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #f59e0b; background-color: #fff7e0; }   /* focus: new border color + background tint */
+    button { margin-top: 20px; padding: 11px 24px; background: #f59e0b; color: #1f2937; font-weight: 600; border: 0; border-radius: 8px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <form action="#" method="post">
+    <h1>Feedback Form</h1>
+    <label for="name">Name</label><input type="text" id="name" placeholder="Your name">
+    <label for="email">Email</label><input type="email" id="email" placeholder="you@example.com">
+    <label for="rating">Rating</label>
+    <select id="rating"><option>5 - Excellent</option><option>4 - Good</option><option>3 - Average</option><option>2 - Poor</option><option>1 - Very poor</option></select>
+    <label for="msg">Comments</label><textarea id="msg" rows="4" placeholder="Tell us what you think"></textarea>
+    <button type="submit">Send Feedback</button>
+  </form>
+  
+</body>
+</html>
